@@ -1,0 +1,511 @@
+{
+  "generated_at": "2026-10-04T04:26:29.113353+00:00",
+  "capabilities": [
+    {
+      "source_name": "LinkedIn Jobs",
+      "domain": "linkedin.com",
+      "source_category": "JOB_NETWORK",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.95,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Indeed",
+      "domain": "indeed.com",
+      "source_category": "JOB_AGGREGATOR",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.6,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Glassdoor Jobs",
+      "domain": "glassdoor.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Google Jobs",
+      "domain": "google.com",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Dice",
+      "domain": "dice.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "eFinancialCareers",
+      "domain": "efinancialcareers.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Technojobs",
+      "domain": "technojobs.co.uk",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.58,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "EURES",
+      "domain": "eures.europa.eu",
+      "source_category": "PUBLIC_EMPLOYMENT",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "UK Find a job",
+      "domain": "findajob.dwp.gov.uk",
+      "source_category": "OTHER",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.49,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Job Bank Canada",
+      "domain": "jobbank.gc.ca",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Workforce Australia",
+      "domain": "workforceaustralia.gov.au",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "SEEK",
+      "domain": "seek.com.au",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Bayt",
+      "domain": "bayt.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "GulfTalent",
+      "domain": "gulftalent.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Naukri",
+      "domain": "naukri.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "JobStreet",
+      "domain": "jobstreet.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "JobsDB",
+      "domain": "jobsdb.com",
+      "source_category": "JOB_BOARD",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.59,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Source responded with HTTP 403; direct automated HTTP access is restricted.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Greenhouse Job Boards",
+      "domain": "greenhouse.io",
+      "source_category": "ATS_PLATFORM",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Lever Job Boards",
+      "domain": "lever.co",
+      "source_category": "ATS_PLATFORM",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.94,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Workday Careers",
+      "domain": "myworkdayjobs.com",
+      "source_category": "ATS_PLATFORM",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.6,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Ashby Job Boards",
+      "domain": "ashbyhq.com",
+      "source_category": "ATS_PLATFORM",
+      "direct_http_access": false,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.58,
+      "recommended_strategy": "SEARCH_ENGINE_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Michael Page",
+      "domain": "michaelpage.com",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Hays",
+      "domain": "hays.com",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Robert Half",
+      "domain": "roberthalf.com",
+      "source_category": "OTHER",
+      "direct_http_access": true,
+      "search_url_available": true,
+      "variable_domain": false,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": false,
+      "capability_confidence": 0.84,
+      "recommended_strategy": "DIRECT_SEARCH",
+      "evidence": [
+        "Source responded successfully to HTTP validation and direct HTTP access is available.",
+        "A concrete search URL is available.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Multinational consulting-firm career sites",
+      "domain": "various employer domains",
+      "source_category": "EMPLOYER_CAREERS",
+      "direct_http_access": false,
+      "search_url_available": false,
+      "variable_domain": true,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.45,
+      "recommended_strategy": "DYNAMIC_DOMAIN_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "Source represents multiple employer or vendor domains rather than one fixed job-search domain.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "Insurance-company career sites",
+      "domain": "various insurer domains",
+      "source_category": "EMPLOYER_CAREERS",
+      "direct_http_access": false,
+      "search_url_available": false,
+      "variable_domain": true,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.45,
+      "recommended_strategy": "DYNAMIC_DOMAIN_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "Source represents multiple employer or vendor domains rather than one fixed job-search domain.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    },
+    {
+      "source_name": "ERP, CRM and software-vendor career sites",
+      "domain": "various software-vendor domains",
+      "source_category": "EMPLOYER_CAREERS",
+      "direct_http_access": false,
+      "search_url_available": false,
+      "variable_domain": true,
+      "search_engine_discovery": true,
+      "browser_strategy_possible": true,
+      "capability_confidence": 0.45,
+      "recommended_strategy": "DYNAMIC_DOMAIN_DISCOVERY",
+      "evidence": [
+        "Direct HTTP validation was uncertain or unavailable.",
+        "Source represents multiple employer or vendor domains rather than one fixed job-search domain.",
+        "Search-engine discovery is available or appropriate for this source.",
+        "Browser-based interaction may be possible for this source.",
+        "Source passed validation or has a supported alternative discovery method."
+      ]
+    }
+  ]
+}

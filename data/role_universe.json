@@ -1,0 +1,670 @@
+{
+  "candidate_profile_version": "v3",
+  "generated_at": "2025-02-14T00:00:00Z",
+  "roles": [
+    {
+      "canonical_title": "Business Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Business Analyst",
+        "BA",
+        "Business Requirements Analyst",
+        "Requirements Analyst"
+      ],
+      "related_keywords": [
+        "requirements elicitation",
+        "stakeholder management",
+        "BRD",
+        "FRD",
+        "UAT",
+        "gap analysis",
+        "requirements traceability"
+      ],
+      "matching_experience": [
+        "Approximately four years of business analysis experience",
+        "Requirements elicitation and stakeholder management",
+        "BRD, FRD and BPD preparation",
+        "UAT, gap analysis and requirements traceability"
+      ],
+      "rationale": "The candidate has broad and directly documented experience across core business analysis activities and deliverables."
+    },
+    {
+      "canonical_title": "Senior Business Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Senior Business Analyst",
+        "Senior BA",
+        "Lead Business Analyst",
+        "Business Analysis Lead"
+      ],
+      "related_keywords": [
+        "end-to-end analysis",
+        "stakeholder alignment",
+        "requirements management",
+        "UAT leadership",
+        "Agile delivery"
+      ],
+      "matching_experience": [
+        "Approximately four years of business analysis experience",
+        "Experience managing requirements and stakeholders",
+        "Agile delivery, UAT and RAID management",
+        "Cross-functional digital transformation exposure"
+      ],
+      "rationale": "The experience level and breadth of analysis, delivery and stakeholder responsibilities support senior individual-contributor business analyst roles."
+    },
+    {
+      "canonical_title": "Technical Business Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Technical Business Analyst",
+        "Technical BA",
+        "IT Business Analyst",
+        "Business Technology Analyst"
+      ],
+      "related_keywords": [
+        "solution design",
+        "data migration",
+        "SQL",
+        "systems integration",
+        "technical requirements",
+        "UAT"
+      ],
+      "matching_experience": [
+        "Solution design and technical requirements documentation",
+        "SQL, Python and data migration exposure",
+        "JIRA, Confluence, GitHub and GitLab",
+        "Coordination between business and technical stakeholders"
+      ],
+      "rationale": "The candidate combines business analysis with technical tools, solution design and migration-related experience without being positioned as an engineer."
+    },
+    {
+      "canonical_title": "Business Systems Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Business Systems Analyst",
+        "Systems Business Analyst",
+        "IT Systems Analyst",
+        "Business Application Analyst"
+      ],
+      "related_keywords": [
+        "business systems",
+        "functional requirements",
+        "system analysis",
+        "integration requirements",
+        "application change"
+      ],
+      "matching_experience": [
+        "Requirements elicitation and solution design",
+        "Process and system gap analysis",
+        "Data migration and UAT experience",
+        "Exposure to CRM, cloud and delivery tooling"
+      ],
+      "rationale": "The profile supports analysis of business applications and system changes at the interface between business users and technical teams."
+    },
+    {
+      "canonical_title": "Functional Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Functional Analyst",
+        "Functional Business Analyst",
+        "IT Functional Analyst",
+        "Functional Requirements Analyst"
+      ],
+      "related_keywords": [
+        "functional requirements",
+        "functional specifications",
+        "configuration support",
+        "UAT",
+        "business applications"
+      ],
+      "matching_experience": [
+        "FRD and BPD preparation",
+        "Requirements traceability and UAT",
+        "Process analysis and solution design",
+        "Microsoft Dynamics 365 exposure"
+      ],
+      "rationale": "Functional analysis is strongly supported through requirements, process, application and user-acceptance responsibilities."
+    },
+    {
+      "canonical_title": "Business Process Analyst",
+      "role_family": "Business Process and BPR",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Business Process Analyst",
+        "Process Analyst",
+        "Business Process Improvement Analyst",
+        "Process Design Analyst"
+      ],
+      "related_keywords": [
+        "process mapping",
+        "process analysis",
+        "process improvement",
+        "BPD",
+        "RACI",
+        "gap analysis"
+      ],
+      "matching_experience": [
+        "Process analysis and process improvement",
+        "Business process documentation using BPDs",
+        "RACI and gap analysis",
+        "Lean Six Sigma Yellow Belt"
+      ],
+      "rationale": "The candidate has direct process-analysis, documentation and improvement capabilities supported by Lean Six Sigma training."
+    },
+    {
+      "canonical_title": "Process Improvement Analyst",
+      "role_family": "Business Process and BPR",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Process Improvement Analyst",
+        "Continuous Improvement Analyst",
+        "Operational Excellence Analyst",
+        "Business Improvement Analyst"
+      ],
+      "related_keywords": [
+        "continuous improvement",
+        "Lean Six Sigma",
+        "root cause analysis",
+        "process optimization",
+        "operational efficiency"
+      ],
+      "matching_experience": [
+        "Process improvement experience",
+        "Lean Six Sigma Yellow Belt",
+        "Gap analysis and process documentation",
+        "RACI-based operating model analysis"
+      ],
+      "rationale": "The profile provides credible support for business-facing process improvement roles, particularly in transformation and operations environments."
+    },
+    {
+      "canonical_title": "Business Process Re-engineering Consultant",
+      "role_family": "Business Process and BPR",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Business Process Re-engineering Consultant",
+        "BPR Consultant",
+        "Business Transformation Consultant",
+        "Process Transformation Consultant"
+      ],
+      "related_keywords": [
+        "BPR",
+        "process redesign",
+        "target operating model",
+        "process transformation",
+        "workflow optimization"
+      ],
+      "matching_experience": [
+        "Approximately three years of digital transformation experience",
+        "Process analysis and improvement",
+        "Solution design, gap analysis and RACI",
+        "Data migration and automation domains"
+      ],
+      "rationale": "Transformation and process redesign experience supports BPR consulting, although the profile does not explicitly document large-scale operating-model ownership."
+    },
+    {
+      "canonical_title": "Digital Transformation Consultant",
+      "role_family": "AI and Digital Transformation",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Digital Transformation Consultant",
+        "Digital Transformation Analyst",
+        "Business Transformation Consultant",
+        "Digital Change Consultant"
+      ],
+      "related_keywords": [
+        "digital transformation",
+        "target-state design",
+        "process digitization",
+        "stakeholder management",
+        "Agile transformation"
+      ],
+      "matching_experience": [
+        "Approximately three years of digital transformation experience",
+        "Solution design and process improvement",
+        "Agile delivery and stakeholder management",
+        "Data migration, CRM and automation domains"
+      ],
+      "rationale": "Digital transformation is a central documented experience area supported by process, technology and delivery skills."
+    },
+    {
+      "canonical_title": "AI Business Analyst",
+      "role_family": "AI and Digital Transformation",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "AI Business Analyst",
+        "Artificial Intelligence Business Analyst",
+        "AI Requirements Analyst",
+        "AI Solutions Business Analyst"
+      ],
+      "related_keywords": [
+        "AI use cases",
+        "AI requirements",
+        "business process analysis",
+        "automation opportunities",
+        "AI adoption"
+      ],
+      "matching_experience": [
+        "AI and digital transformation as target domains",
+        "Business analysis and requirements elicitation",
+        "Process analysis and automation exposure",
+        "Healthcare claims OCR domain experience"
+      ],
+      "rationale": "The candidate is suited to business-facing AI use-case discovery, requirements and adoption work, but not advanced AI engineering."
+    },
+    {
+      "canonical_title": "AI Transformation Consultant",
+      "role_family": "AI and Digital Transformation",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "AI Transformation Consultant",
+        "AI Adoption Consultant",
+        "AI Strategy Analyst",
+        "Intelligent Automation Transformation Consultant"
+      ],
+      "related_keywords": [
+        "AI transformation",
+        "AI adoption",
+        "use-case prioritization",
+        "process automation",
+        "operating model change"
+      ],
+      "matching_experience": [
+        "Digital transformation experience",
+        "AI-enabled business analysis positioning",
+        "RPA and automation domain exposure",
+        "Process improvement and stakeholder coordination"
+      ],
+      "rationale": "The combination of transformation, automation and business analysis supports AI adoption and transformation consulting roles with a business focus."
+    },
+    {
+      "canonical_title": "RPA Business Analyst",
+      "role_family": "AI and Digital Transformation",
+      "relevance": "HIGH",
+      "search_variants": [
+        "RPA Business Analyst",
+        "Robotic Process Automation Business Analyst",
+        "Automation Business Analyst",
+        "Intelligent Automation Analyst"
+      ],
+      "related_keywords": [
+        "RPA",
+        "process discovery",
+        "automation assessment",
+        "bot requirements",
+        "workflow automation"
+      ],
+      "matching_experience": [
+        "RPA and automation domain experience",
+        "Automation Anywhere exposure",
+        "Process analysis and improvement",
+        "Requirements elicitation and UAT"
+      ],
+      "rationale": "RPA business analysis is directly supported by the candidate's automation domain, tooling and process-analysis capabilities."
+    },
+    {
+      "canonical_title": "Automation Transformation Analyst",
+      "role_family": "AI and Digital Transformation",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Automation Transformation Analyst",
+        "Intelligent Automation Consultant",
+        "Automation Process Analyst",
+        "Digital Automation Analyst"
+      ],
+      "related_keywords": [
+        "intelligent automation",
+        "workflow redesign",
+        "automation pipeline",
+        "process digitization",
+        "benefit assessment"
+      ],
+      "matching_experience": [
+        "RPA and automation experience",
+        "Digital transformation background",
+        "Process improvement and gap analysis",
+        "Stakeholder and requirements management"
+      ],
+      "rationale": "The candidate can support business-led automation transformation, especially discovery, process redesign and delivery coordination."
+    },
+    {
+      "canonical_title": "Insurance Business Analyst",
+      "role_family": "Insurance and Financial Services",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Insurance Business Analyst",
+        "Life Insurance Business Analyst",
+        "Insurance BA",
+        "BFSI Business Analyst"
+      ],
+      "related_keywords": [
+        "life insurance",
+        "insurance operations",
+        "policy administration",
+        "claims",
+        "underwriting",
+        "requirements analysis"
+      ],
+      "matching_experience": [
+        "Approximately two years of life insurance experience",
+        "BFSI domain exposure",
+        "Business analysis and stakeholder management",
+        "Process analysis, UAT and requirements documentation"
+      ],
+      "rationale": "Life insurance and BFSI experience directly support business analyst roles in insurance operations and technology change."
+    },
+    {
+      "canonical_title": "Insurance Functional Analyst",
+      "role_family": "Insurance and Financial Services",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Insurance Functional Analyst",
+        "Life Insurance Functional Analyst",
+        "Insurance Systems Analyst",
+        "Insurance Application Analyst"
+      ],
+      "related_keywords": [
+        "insurance systems",
+        "policy administration",
+        "functional requirements",
+        "claims processes",
+        "UAT"
+      ],
+      "matching_experience": [
+        "Life insurance domain experience",
+        "Functional requirements and solution design",
+        "Process and system gap analysis",
+        "UAT and migration-related experience"
+      ],
+      "rationale": "The candidate's insurance knowledge and functional analysis skills align with insurance application and process change roles."
+    },
+    {
+      "canonical_title": "Insurance Transformation Consultant",
+      "role_family": "Insurance and Financial Services",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Insurance Transformation Consultant",
+        "Insurance Change Consultant",
+        "Insurance Digital Transformation Consultant",
+        "BFSI Transformation Consultant"
+      ],
+      "related_keywords": [
+        "insurance transformation",
+        "operating model change",
+        "process digitization",
+        "policy lifecycle",
+        "claims transformation"
+      ],
+      "matching_experience": [
+        "Life insurance and BFSI experience",
+        "Approximately three years of digital transformation experience",
+        "Process improvement, migration and solution design",
+        "Stakeholder and delivery management"
+      ],
+      "rationale": "The profile supports insurance-focused transformation consulting, particularly business process, digital and migration initiatives."
+    },
+    {
+      "canonical_title": "Insurance Process Analyst",
+      "role_family": "Insurance and Financial Services",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Insurance Process Analyst",
+        "Life Insurance Process Analyst",
+        "Insurance Operations Analyst",
+        "Insurance Process Improvement Analyst"
+      ],
+      "related_keywords": [
+        "insurance operations",
+        "process mapping",
+        "policy servicing",
+        "claims operations",
+        "process improvement"
+      ],
+      "matching_experience": [
+        "Life insurance experience",
+        "Process analysis and improvement",
+        "Healthcare claims OCR domain exposure",
+        "BPD, RACI and gap analysis"
+      ],
+      "rationale": "Insurance process analysis is supported by domain experience combined with documented process improvement and claims-related exposure."
+    },
+    {
+      "canonical_title": "Data Business Analyst",
+      "role_family": "Data and Analytics",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Data Business Analyst",
+        "Business Data Analyst",
+        "Data Requirements Analyst",
+        "Data Analysis Business Analyst"
+      ],
+      "related_keywords": [
+        "data requirements",
+        "data quality",
+        "SQL",
+        "data mapping",
+        "data validation",
+        "business intelligence"
+      ],
+      "matching_experience": [
+        "Master's in Business Analytics",
+        "SQL, Excel, Python and dashboarding tools",
+        "Data migration and requirements experience",
+        "Business analysis and stakeholder management"
+      ],
+      "rationale": "The candidate has strong business-facing data capabilities and formal analytics education without requiring advanced data engineering responsibilities."
+    },
+    {
+      "canonical_title": "BI Business Analyst",
+      "role_family": "Data and Analytics",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "BI Business Analyst",
+        "Business Intelligence Analyst",
+        "Business Intelligence Business Analyst",
+        "Reporting Business Analyst"
+      ],
+      "related_keywords": [
+        "Power BI",
+        "Tableau",
+        "reporting requirements",
+        "KPI definition",
+        "dashboard analysis",
+        "data visualization"
+      ],
+      "matching_experience": [
+        "Power BI and Tableau",
+        "Master's in Business Analytics",
+        "SQL and Excel",
+        "Requirements elicitation and stakeholder management"
+      ],
+      "rationale": "BI analysis is a realistic adjacent role based on analytics education, reporting tools and business requirements skills."
+    },
+    {
+      "canonical_title": "Data Migration Business Analyst",
+      "role_family": "Data and Analytics",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Data Migration Business Analyst",
+        "Data Migration Analyst",
+        "Data Conversion Business Analyst",
+        "Migration Functional Analyst"
+      ],
+      "related_keywords": [
+        "data migration",
+        "data mapping",
+        "data validation",
+        "data reconciliation",
+        "cutover planning",
+        "migration requirements"
+      ],
+      "matching_experience": [
+        "Documented data migration experience",
+        "SQL and Excel",
+        "Requirements traceability and UAT",
+        "Process and solution analysis"
+      ],
+      "rationale": "Data migration is an explicit domain and skill area, making migration-focused business analysis a strongly supported role."
+    },
+    {
+      "canonical_title": "Data Quality Business Analyst",
+      "role_family": "Data and Analytics",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Data Quality Business Analyst",
+        "Data Governance Business Analyst",
+        "Data Quality Analyst",
+        "Data Validation Analyst"
+      ],
+      "related_keywords": [
+        "data quality",
+        "data validation",
+        "data reconciliation",
+        "data rules",
+        "data lineage",
+        "requirements management"
+      ],
+      "matching_experience": [
+        "Data migration experience",
+        "SQL, Excel and Python",
+        "Requirements traceability",
+        "Business analytics education"
+      ],
+      "rationale": "The candidate has relevant migration, validation and analytics foundations, though explicit data governance ownership is not documented."
+    },
+    {
+      "canonical_title": "CRM Business Analyst",
+      "role_family": "Product and CRM",
+      "relevance": "HIGH",
+      "search_variants": [
+        "CRM Business Analyst",
+        "CRM BA",
+        "Customer Relationship Management Business Analyst",
+        "CRM Functional Analyst"
+      ],
+      "related_keywords": [
+        "CRM requirements",
+        "customer journeys",
+        "case management",
+        "workflow design",
+        "CRM implementation",
+        "UAT"
+      ],
+      "matching_experience": [
+        "CRM as a documented domain",
+        "Microsoft Dynamics 365 exposure",
+        "Requirements elicitation and process analysis",
+        "Solution design, migration and UAT"
+      ],
+      "rationale": "CRM analysis is directly supported by the Dynamics 365 toolset, CRM domain and business systems capabilities."
+    },
+    {
+      "canonical_title": "Dynamics 365 Functional Consultant",
+      "role_family": "Product and CRM",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Microsoft Dynamics 365 Functional Consultant",
+        "Dynamics 365 Business Analyst",
+        "D365 Functional Analyst",
+        "Dynamics CRM Consultant"
+      ],
+      "related_keywords": [
+        "Dynamics 365",
+        "CRM configuration",
+        "functional requirements",
+        "business process mapping",
+        "UAT",
+        "data migration"
+      ],
+      "matching_experience": [
+        "Microsoft Dynamics 365 exposure",
+        "CRM domain experience",
+        "Functional requirements and process analysis",
+        "Data migration and UAT"
+      ],
+      "rationale": "The profile supports business-facing Dynamics 365 functional and implementation roles, particularly requirements, process and testing work rather than deep platform engineering."
+    },
+    {
+      "canonical_title": "Product Business Analyst",
+      "role_family": "Product and CRM",
+      "relevance": "HIGH",
+      "search_variants": [
+        "Product Business Analyst",
+        "Product Analyst",
+        "Product Requirements Analyst",
+        "Digital Product Business Analyst"
+      ],
+      "related_keywords": [
+        "product requirements",
+        "user stories",
+        "customer journeys",
+        "product discovery",
+        "UAT",
+        "Agile delivery"
+      ],
+      "matching_experience": [
+        "Business analysis and Agile experience",
+        "Requirements elicitation and stakeholder management",
+        "Digital transformation and CRM domains",
+        "UAT and solution design"
+      ],
+      "rationale": "The candidate can support product discovery and delivery through requirements, process, stakeholder and acceptance activities, without assuming product ownership."
+    },
+    {
+      "canonical_title": "Digital Product Analyst",
+      "role_family": "Product and CRM",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "Digital Product Analyst",
+        "Digital Business Analyst",
+        "Digital Product Business Analyst",
+        "Customer Experience Analyst"
+      ],
+      "related_keywords": [
+        "digital products",
+        "customer journeys",
+        "digital process design",
+        "product analytics",
+        "Agile",
+        "UAT"
+      ],
+      "matching_experience": [
+        "Digital transformation experience",
+        "CRM and business analysis domains",
+        "Power BI, Tableau, SQL and Excel",
+        "Agile, requirements and UAT capabilities"
+      ],
+      "rationale": "Digital product analysis is a reasonable extension of the candidate's transformation, CRM, analytics and business analysis background."
+    },
+    {
+      "canonical_title": "Business Acceptance and UAT Analyst",
+      "role_family": "Business Analysis",
+      "relevance": "MEDIUM",
+      "search_variants": [
+        "UAT Analyst",
+        "Business Acceptance Analyst",
+        "User Acceptance Testing Analyst",
+        "Test Business Analyst"
+      ],
+      "related_keywords": [
+        "UAT",
+        "test scenarios",
+        "acceptance criteria",
+        "requirements traceability",
+        "defect management",
+        "business validation"
+      ],
+      "matching_experience": [
+        "Documented UAT experience",
+        "Requirements traceability",
+        "BRD and FRD preparation",
+        "JIRA and stakeholder coordination"
+      ],
+      "rationale": "The profile supports business-led acceptance and validation roles, although it does not indicate specialist software testing automation expertise."
+    }
+  ]
+}
