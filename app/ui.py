@@ -35,7 +35,9 @@ from app.services.cv_ingestion_service import (
 from app.discovery.search_executor import (
     SearchExecutor,
 )
-
+from app.discovery.search_strategy import (
+    SearchStrategy,
+)
 from app.discovery.deduplicator import (
     SourceDeduplicator,
 )
@@ -332,6 +334,10 @@ def format_score(
 
 
 def run_live_job_search() -> dict[str, Any]:
+
+    strategy = SearchStrategy()
+
+    strategy.run()
 
     executor = SearchExecutor()
 
