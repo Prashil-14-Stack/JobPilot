@@ -189,6 +189,8 @@ if st.session_state.authenticated:
 # ============================================================
 # SESSION STATE
 # ============================================================
+if "current_cv_name" not in st.session_state:
+    st.session_state.current_cv_name = None
 
 if "recent_jobs" not in st.session_state:
     st.session_state.recent_jobs = []
@@ -781,12 +783,21 @@ with st.sidebar:
             str(current_cv)
         )
 
+    elif st.session_state.current_cv_name:
+
+        st.success(
+            "Current CV available"
+        )
+
+        st.caption(
+            st.session_state.current_cv_name
+        )
+
     else:
 
         st.warning(
             "Current CV not found."
         )
-
 
 # ============================================================
 # SECTION 1 — CV
@@ -854,7 +865,7 @@ if uploaded_file is not None:
                 profile = service.ingest(
                     temp_path
                 )
-
+                st.session_state.current_cv_name = uploaded_file.name
             st.success(
                 "CV analyzed successfully."
             )
