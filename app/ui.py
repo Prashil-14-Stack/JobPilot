@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import json
@@ -8,7 +9,6 @@ from typing import Any
 
 import streamlit as st
 
-from app.networking.playwright_setup import ensure_chromium_installed
 # ============================================================
 # PROJECT PATH
 # ============================================================
@@ -18,14 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-
-# ============================================================
-# EXISTING CV COMPONENTS
-# ============================================================
-
-from app.services.cv_ingestion_service import (
-    CVIngestionService,
-)
+from app.networking.playwright_setup import ensure_chromium_installed
 
 
 # ============================================================
