@@ -263,6 +263,30 @@ class JobDatabase:
                 """
             )
 
+        # --------------------------------------------------
+        # Schema migration: review_status
+        # --------------------------------------------------
+
+        cursor.execute(
+            """
+            PRAGMA table_info(jobs)
+            """
+        )
+
+        columns = {
+            row[1]
+            for row in cursor.fetchall()
+        }
+
+        if "review_status" not in columns:
+            cursor.execute(
+                """
+                ALTER TABLE jobs
+                ADD COLUMN review_status TEXT
+                DEFAULT 'PENDING'
+                """
+            )
+
         self.connection.commit()
 
     # --------------------------------------------------

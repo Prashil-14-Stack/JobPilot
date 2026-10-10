@@ -509,7 +509,66 @@ class JobStore:
 
         return counts
 
+    # --------------------------------------------------
+    # Job review queue
+    # --------------------------------------------------
 
+    def dismiss_job(
+        self,
+        job_id: int,
+    ) -> bool:
+        """Persist a user's decision to dismiss a job."""
+
+        cursor = self.database.connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE jobs
+            SET review_status = 'DISMISSED',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                self.utc_now(),
+                job_id,
+            ),
+        )
+
+        self.database.connection.commit()
+
+        return cursor.rowcount > 0
+
+    def get_pending_review_jobs(
+        self,
+        limit: int = 10,
+    ) -> list[dict[str, Any]]:
+        """Return the next eligible jobs for the review queue."""
+
+        cursor = self.database.connection.cursor()
+
+        cursor.execute(
+            """
+            SELECT *
+            FROM jobs
+            WHERE COALESCE(review_status, 'PENDING') = 'PENDING'
+            ORDER BY
+                CASE
+                    WHEN posted_date IS NULL OR posted_date = ''
+                    THEN 1
+                    ELSE 0
+                END,
+                relevance_score DESC,
+                discovered_at DESC,
+                id DESC
+            LIMIT ?
+            """,
+            (limit,),
+        )
+
+        return [
+            dict(row)
+            for row in cursor.fetchall()
+        ]
 # ------------------------------------------------------
 # Command-line execution
 # ------------------------------------------------------
