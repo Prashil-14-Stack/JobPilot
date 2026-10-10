@@ -8,7 +8,7 @@ from typing import Any
 
 import streamlit as st
 
-
+from app.networking.playwright_setup import ensure_chromium_installed
 # ============================================================
 # PROJECT PATH
 # ============================================================
@@ -1152,10 +1152,14 @@ def _jp_job_card(job, idx, with_contacts=True):
                     if ok:st.session_state.recent_jobs=[x for x in st.session_state.get('recent_jobs',[]) if get_job_key(x)!=key];st.rerun()
                     else:st.error('Could not dismiss this job.')
         if with_contacts:
-            if st.button('Find contacts',key=f'jp_find_{key}'):
+            if st.button('Find contacts', key=f'jp_find_{key}'):
                 try:
-                    with st.spinner('Finding relevant contacts...'):st.session_state.contacts[key]=discover_contacts(job)
-                except Exception as exc:st.error(f'Contact discovery failed: {exc}')
+                    ensure_chromium_installed()
+
+                    with st.spinner('Finding relevant contacts...'):
+                        st.session_state.contacts[key] = discover_contacts(job)
+                except Exception as exc:
+                    st.error(f'Contact discovery failed: {exc}')
             result=st.session_state.contacts.get(key)
             if result:
                 found_contacts = result.get('contacts', [])
