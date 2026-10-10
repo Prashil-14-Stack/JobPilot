@@ -1,7 +1,5 @@
-
 from __future__ import annotations
-from app.networking.playwright_setup import ensure_chromium_installed
-from app.services.cv_ingestion_service import CVIngestionService
+
 import json
 import sys
 import tempfile
@@ -20,6 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from app.networking.playwright_setup import ensure_chromium_installed
+from app.services.cv_ingestion_service import CVIngestionService
 
 
 # ============================================================
@@ -668,8 +667,11 @@ def run_live_job_search() -> dict[str, Any]:
 
     executor = SearchExecutor()
 
-    # SearchExecutor.run() returns the list of jobs.
-    jobs = executor.run()
+    # Start with a controlled batch of high-priority searches.
+    jobs = executor.run(
+        limit=20,
+        priority="HIGH",
+    )
 
     # The execution metrics are persisted separately.
     report_path = (
@@ -923,6 +925,27 @@ def run_live_job_search() -> dict[str, Any]:
     return (
         st.session_state.search_report
     )
+
+def restore_recent_jobs() -> list[dict[str, Any]]:
+    """Restore eligible Business Analyst jobs from SQLite."""
+
+    recent_jobs = get_recent_jobs(days=7)
+
+    ba_jobs = [
+        job
+        for job in recent_jobs
+        if is_ba_title(job.get("title"))
+        and (
+            job.get("review_status") or "PENDING"
+        ).upper() != "DISMISSED"
+    ]
+
+    ba_jobs.sort(
+        key=lambda job: job.get("relevance_score") or 0,
+        reverse=True,
+    )
+
+    return ba_jobs
 
 # ============================================================
 # CONTACT DISCOVERY
@@ -1183,15 +1206,25 @@ def _jp_job_card(job, idx, with_contacts=True):
                             st.text_input('Subject',value=draft.subject,disabled=True,key=f'jp_sub_{rid}')
                             st.text_area('Email body',value=draft.body,disabled=True,key=f'jp_body_{rid}',height=160)
                             if st.button('Approve & Send',type='primary',key=f'jp_send_{rid}'):
-                                try:
-                                    result=approve_and_send(rid);st.success('Email sent.') if result.get('status')=='SENT' else st.error(str(result))
-                                except Exception as exc:st.error(f'Email send failed: {exc}')
+                                try:     
+                                    result = approve_and_send(rid)
 
+                                    if result.get("status") == "SENT":
+                                        st.success("Email accepted by the sending service.")
+                                    else:
+                                        st.error(f"Email sending failed: {result}")
+                                except Exception as exc:st.error(f'Email send failed: {exc}')
 with st.sidebar:
     st.markdown('<div class="jp-brand">🎯 JobPilot</div>',unsafe_allow_html=True)
     st.markdown('<div class="jp-tagline">Find. Connect. Outreach. Grow.</div>',unsafe_allow_html=True)
     page=st.radio('NAVIGATION',['Dashboard','Job Discovery','Contacts','Outreach','Follow-ups','Candidate Profile'],label_visibility='collapsed',key='jp_navigation')
     st.divider();cv=PROJECT_ROOT/'data'/'candidate'/'cv'/'current_cv.pdf';st.markdown('**Current CV**');st.caption(cv.name if cv.exists() else 'No current CV file found')
+
+if not st.session_state.get("recent_jobs"):
+    try:
+        st.session_state.recent_jobs = restore_recent_jobs()
+    except Exception as exc:
+        st.warning(f"Could not restore saved jobs: {exc}")
 
 snap=_jp_snapshot(); outreach=_jp_outreach(); statuses=_jp_counts(outreach)
 if page=='Dashboard':
@@ -1272,8 +1305,13 @@ elif page=='Outreach':
                 st.write(f"**{rec.get('Company','')}** · {rec.get('Role','')}");st.write(f"**To:** {rec.get('Contact Name','')} · {rec.get('Contact Email','')}");st.write(f"**Subject:** {rec.get('Subject','')}")
                 st.text_area('Email body',value=str(rec.get('Email Body') or ''),disabled=True,key=f'jp_detail_{selected}',height=180)
                 if str(rec.get('Status','')).upper() in ('DRAFT','SEND_FAILED') and st.button('Approve & Send selected email',type='primary',key=f'jp_approve_{selected}'):
-                    try:
-                        result=approve_and_send(selected);st.success('Email sent.') if result.get('status')=='SENT' else st.error(str(result));st.rerun()
+                    try:                  
+                        result = approve_and_send(selected)
+                        if result.get("status") == "SENT":
+                            st.success("Email accepted by the sending service.")
+                        else:
+                            st.error(f"Email sending failed: {result}")
+                        st.rerun()
                     except Exception as exc:st.error(f'Could not send: {exc}')
     else:st.info('No outreach records found. Generate a draft from a job contact panel.')
 elif page=='Follow-ups':
