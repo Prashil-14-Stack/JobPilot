@@ -14,6 +14,13 @@ class HunterClient:
         self.api_key = os.getenv("HUNTER_API_KEY")
 
         if not self.api_key:
+            try:
+                import streamlit as st
+                self.api_key = st.secrets.get("HUNTER_API_KEY")
+            except Exception:
+                self.api_key = None
+
+        if not self.api_key:
             raise ValueError(
                 "HUNTER_API_KEY is not configured in the environment."
             )
