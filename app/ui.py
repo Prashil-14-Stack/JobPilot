@@ -1,6 +1,7 @@
 
 from __future__ import annotations
-
+from app.networking.playwright_setup import ensure_chromium_installed
+from app.services.cv_ingestion_service import CVIngestionService
 import json
 import sys
 import tempfile
