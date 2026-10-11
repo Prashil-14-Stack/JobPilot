@@ -43,6 +43,8 @@ from app.discovery.normalizer import (
 
 from app.discovery.job_recency import (
     get_recent_jobs,
+    is_posted_within_days,
+    parse_posted_date,
 )
 
 from app.discovery.deterministic_job_scorer import (
@@ -1262,7 +1264,12 @@ if page=='Dashboard':
         if current:
             st.caption(f'{len(current)} eligible Business Analyst jobs in current search results')
             for i,job in enumerate(current[:3]):_jp_job_card(job,i,False)
-            if st.button('Open all job results →'):st.session_state.jp_navigation='Job Discovery';st.rerun()
+            st.button(
+            'Open all job results →',
+            on_click=lambda: st.session_state.update(
+                {'jp_navigation': 'Job Discovery'}
+            )
+        )
         else:st.info('Run a live search to populate this area with current opportunities.')
 elif page=='Job Discovery':
     st.markdown('<div class="jp-welcome">Live Job Discovery</div>',unsafe_allow_html=True);st.caption('Review opportunities, inspect match scores, and find relevant contacts.')
@@ -1274,12 +1281,110 @@ elif page=='Job Discovery':
                 with st.spinner('Searching live sources...'):run_live_job_search()
                 st.rerun()
             except Exception as exc:st.error(f'Job search failed: {exc}')
-    jobs=st.session_state.get('recent_jobs',[])
+
+    # Load the complete stored job catalogue.
+    db = JobDatabase()
+    try:
+        jobs = [
+            dict(row)
+            for row in db.connection.execute(
+                """
+                SELECT *
+                FROM jobs
+                ORDER BY
+                    COALESCE(relevance_score, 0) DESC,
+                    COALESCE(last_seen_at, discovered_at, created_at) DESC
+                """
+            ).fetchall()
+        ]
+    finally:
+        db.connection.close()
+
+    # Independent catalogue filters.
+    role_filter = st.selectbox(
+        "Role category",
+        [
+            "All discovered jobs",
+            "Business Analyst titles",
+            "Other titles",
+        ],
+        key="jp_catalogue_role_filter",
+    )
+
+    date_filter = st.selectbox(
+        "Posting date",
+        [
+            "All dates",
+            "Posted within 7 days",
+            "Older than 7 days",
+            "Date unknown",
+        ],
+        key="jp_catalogue_date_filter",
+    )
+
+    if role_filter == "Business Analyst titles":
+        jobs = [
+            job for job in jobs
+            if is_ba_title(job.get("title"))
+        ]
+    elif role_filter == "Other titles":
+        jobs = [
+            job for job in jobs
+            if not is_ba_title(job.get("title"))
+        ]
+
+    if date_filter == "Posted within 7 days":
+        jobs = [
+            job for job in jobs
+            if is_posted_within_days(
+                job.get("posted_date"), days=7
+            )
+        ]
+    elif date_filter == "Older than 7 days":
+        jobs = [
+            job for job in jobs
+            if parse_posted_date(job.get("posted_date")) is not None
+            and not is_posted_within_days(
+                job.get("posted_date"), days=7
+            )
+        ]
+    elif date_filter == "Date unknown":
+        jobs = [
+            job for job in jobs
+            if parse_posted_date(job.get("posted_date")) is None
+        ]
+
+    # Search across the filtered catalogue.
     if q:
-        term=q.lower();jobs=[j for j in jobs if term in str(j.get('title','')).lower() or term in str(j.get('company','')).lower() or term in str(j.get('description','')).lower()]
-    st.caption(f'Showing up to 10 of {len(jobs)} eligible jobs')
-    if not jobs:st.info('Run Live Job Search to load current results.')
-    for i,job in enumerate(jobs[:10]):_jp_job_card(job,i,True)
+        term = q.strip().lower()
+        jobs = [
+            job for job in jobs
+            if any(
+                term in str(job.get(field) or "").lower()
+                for field in ("title", "company", "description")
+            )
+        ]
+
+    st.caption(f"{len(jobs)} jobs match your selected filters.")
+
+    if not jobs:
+        st.info("No jobs match these filters. Try a broader selection.")
+    else:
+        display_limit = st.selectbox(
+            "Results to display",
+            [10, 25, 50, 100],
+            index=2,
+            key="jp_catalogue_display_limit",
+        )
+
+        for i, job in enumerate(jobs[:display_limit]):
+            _jp_job_card(job, i, True)
+
+        if len(jobs) > display_limit:
+            st.caption(
+                f"Showing {display_limit} of {len(jobs)} matching jobs. "
+                "Increase the display limit to see more."
+            )
 elif page=='Contacts':
     st.markdown('<div class="jp-welcome">Contacts & Networking</div>',unsafe_allow_html=True);st.caption('Persisted contacts. Contact-to-job relationships are not stored separately yet.')
     db=JobDatabase()
