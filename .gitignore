@@ -40,3 +40,5 @@ candidate_profile.json
 
 # Candidate data
 /data/candidate/
+
+token.json.backup

@@ -57,13 +57,21 @@ class GmailSender:
         if credentials and credentials.expired:
 
             if credentials.refresh_token:
+                try:
+                    credentials.refresh(Request())
+                except Exception as exc:
+                    # Reauthorize only when Google's token refresh is rejected.
+                    from google.auth.exceptions import RefreshError
 
-                credentials.refresh(
-                    Request()
-                )
+                    if not isinstance(exc, RefreshError):
+                        raise
 
+                    print(
+                        "Google OAuth refresh failed; "
+                        "starting browser reauthorization."
+                    )
+                    credentials = None
             else:
-
                 credentials = None
 
         if not credentials:

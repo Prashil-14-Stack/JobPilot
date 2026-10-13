@@ -57,17 +57,14 @@ class ApprovalProcessor:
             or ""
         ).upper()
 
-        if status not in (
-            "APPROVED",
-            "SEND_FAILED",
-        ):
+        if status != "APPROVED":
 
             return {
                 "run_id": run_id,
                 "status": status,
                 "action": "SKIPPED",
                 "reason": (
-                    "Only APPROVED or SEND_FAILED "
+                    "Only APPROVED "
                     "outreach can be processed."
                 ),
             }
@@ -78,11 +75,7 @@ class ApprovalProcessor:
                 run_id
             )
 
-        elif status == "SEND_FAILED":
-
-            self.tracker.mark_retrying(
-                run_id
-            )
+        gmail_message_id = None
 
         try:
 
@@ -127,6 +120,22 @@ class ApprovalProcessor:
             }
 
         except Exception as exc:
+
+            # Gmail has confirmed acceptance if a message ID was returned.
+            # A later tracker error must not turn that delivery into a
+            # retryable SEND_FAILED record.
+            if gmail_message_id:
+                return {
+                    "run_id": run_id,
+                    "status": "SENT_TRACKING_FAILED",
+                    "action": "TRACKING_FAILED",
+                    "gmail_message_id": gmail_message_id,
+                    "error_message": (
+                        "Gmail accepted the message, but JobPilot could "
+                        "not confirm the tracker update: "
+                        f"{exc}"
+                    ),
+                }
 
             failed_result = (
                 self.tracker.mark_send_failed(

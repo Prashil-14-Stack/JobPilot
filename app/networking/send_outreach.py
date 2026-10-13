@@ -4,6 +4,7 @@ import sys
 
 from app.networking.gmail_sender import GmailSender
 from app.networking.outreach_tracker import OutreachTracker
+from app.networking.approval_processor import ApprovalProcessor
 
 
 def send_outreach(
@@ -65,37 +66,12 @@ def send_outreach(
             ),
         }
 
-    encoded_message = (
-        sender.build_raw_message(
-            message
-        )
+    processor = ApprovalProcessor(
+        tracker=tracker,
+        sender=sender,
     )
 
-    result = (
-        sender.service
-        .users()
-        .messages()
-        .send(
-            userId="me",
-            body={
-                "raw": encoded_message
-            },
-        )
-        .execute()
-    )
-
-    tracker.update_status(
-        run_id,
-        "SENT",
-    )
-
-    return {
-        "run_id": run_id,
-        "status": "SENT",
-        "gmail_message_id": result.get(
-            "id"
-        ),
-    }
+    return processor.process(run_id)
 
 
 if __name__ == "__main__":

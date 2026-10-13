@@ -231,10 +231,20 @@ class OutreachTracker:
                 or ""
             ).upper()
 
-            if current_status == "SENT":
+            allowed_transitions = {
+                "DRAFT": {"APPROVED"},
+            }
+
+            normalized_current = str(current_status or "").upper()
+            normalized_target = str(status or "").upper()
+
+            if normalized_target not in allowed_transitions.get(
+                normalized_current, set()
+            ):
                 raise PermissionError(
-                    f"Outreach {run_id} has "
-                    "already been sent."
+                    f"Invalid outreach status transition for {run_id}: "
+                    f"{normalized_current or 'UNKNOWN'} -> "
+                    f"{normalized_target or 'UNKNOWN'}."
                 )
 
             if current_status != "SENDING":
@@ -638,16 +648,30 @@ class OutreachTracker:
                 column=status_column,
             ).value
 
-            if current_status == "SENT":
+            allowed_transitions = {
+                "DRAFT": {"APPROVED"},
+            }
+
+            normalized_current = str(
+                current_status or ""
+            ).upper()
+            normalized_target = str(
+                status or ""
+            ).upper()
+
+            if normalized_target not in allowed_transitions.get(
+                normalized_current, set()
+            ):
                 raise PermissionError(
-                    f"Outreach {run_id} has "
-                    "already been sent."
+                    f"Invalid outreach status transition for {run_id}: "
+                    f"{normalized_current or 'UNKNOWN'} -> "
+                    f"{normalized_target or 'UNKNOWN'}."
                 )
 
             worksheet.cell(
                 row=row_number,
                 column=status_column,
-            ).value = status
+            ).value = normalized_target
 
             workbook.save(
                 self.output_path
