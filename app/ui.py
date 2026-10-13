@@ -933,14 +933,21 @@ def restore_recent_jobs() -> list[dict[str, Any]]:
 
     recent_jobs = get_recent_jobs(days=7)
 
+
     ba_jobs = [
         job
         for job in recent_jobs
-        if is_ba_title(job.get("title"))
+        if (
+            is_ba_title(job.get("title"))
+            or (
+                job.get("relevance_level") or ""
+            ).upper() in {"CORE", "ADJACENT"}
+        )
         and (
             job.get("review_status") or "PENDING"
         ).upper() != "DISMISSED"
     ]
+
 
     ba_jobs.sort(
         key=lambda job: job.get("relevance_score") or 0,
@@ -1072,6 +1079,17 @@ def approve_and_send(
 ) -> dict[str, Any]:
 
     tracker = OutreachTracker()
+    outreach = tracker.get_outreach(run_id)
+    current_status = str(
+        (outreach or {}).get("Status", "")
+    ).upper()
+
+    if current_status != "DRAFT":
+        raise PermissionError(
+            f"Normal send is allowed only for DRAFT records. "
+            f"Current status for {run_id}: {current_status or 'UNKNOWN'}. "
+            "Verify delivery before attempting recovery."
+        )
 
     tracker.update_status(
         run_id,
@@ -1141,6 +1159,8 @@ def _jp_counts(rows):
     return out
 
 def _jp_job_card(job, idx, with_contacts=True):
+    if str(job.get("review_status") or "PENDING").upper() == "DISMISSED":
+        return
     key=get_job_key(job); score=job.get('relevance_score')
     try: score=max(0,min(100,int(float(score)))) if score is not None else None
     except (ValueError,TypeError): score=None
@@ -1300,6 +1320,11 @@ elif page=='Job Discovery':
     finally:
         db.connection.close()
 
+    jobs = [
+        job for job in jobs
+        if str(job.get("review_status") or "PENDING").upper()
+        != "DISMISSED"
+    ]
     # Independent catalogue filters.
     role_filter = st.selectbox(
         "Role category",
@@ -1322,16 +1347,30 @@ elif page=='Job Discovery':
         key="jp_catalogue_date_filter",
     )
 
+
+    def is_approved_relevant_job(job):
+        return (
+            (job.get("relevance_level") or "").upper()
+            in {"CORE", "ADJACENT"}
+            and (job.get("review_status") or "PENDING").upper()
+            != "DISMISSED"
+        )
+
+
     if role_filter == "Business Analyst titles":
         jobs = [
             job for job in jobs
             if is_ba_title(job.get("title"))
+            or is_approved_relevant_job(job)
         ]
     elif role_filter == "Other titles":
         jobs = [
             job for job in jobs
             if not is_ba_title(job.get("title"))
+            and not is_approved_relevant_job(job)
         ]
+
+
 
     if date_filter == "Posted within 7 days":
         jobs = [
@@ -1339,7 +1378,17 @@ elif page=='Job Discovery':
             if is_posted_within_days(
                 job.get("posted_date"), days=7
             )
+            or (
+                parse_posted_date(job.get("posted_date")) is None
+                and is_posted_within_days(
+                    job.get("first_seen_at")
+                    or job.get("discovered_at")
+                    or job.get("created_at"),
+                    days=7,
+                )
+            )
         ]
+
     elif date_filter == "Older than 7 days":
         jobs = [
             job for job in jobs
@@ -1409,7 +1458,12 @@ elif page=='Outreach':
             with st.expander(f'Details — {selected}',expanded=True):
                 st.write(f"**{rec.get('Company','')}** · {rec.get('Role','')}");st.write(f"**To:** {rec.get('Contact Name','')} · {rec.get('Contact Email','')}");st.write(f"**Subject:** {rec.get('Subject','')}")
                 st.text_area('Email body',value=str(rec.get('Email Body') or ''),disabled=True,key=f'jp_detail_{selected}',height=180)
-                if str(rec.get('Status','')).upper() in ('DRAFT','SEND_FAILED') and st.button('Approve & Send selected email',type='primary',key=f'jp_approve_{selected}'):
+                if str(rec.get('Status','')).upper() == 'SEND_FAILED':
+                    st.warning(
+                        'This email may already have been delivered. '
+                        'Check Gmail Sent and reconcile the tracker before any retry.'
+                    )
+                if str(rec.get('Status','')).upper() == 'DRAFT' and st.button('Approve & Send selected email',type='primary',key=f'jp_approve_{selected}'):
                     try:                  
                         result = approve_and_send(selected)
                         if result.get("status") == "SENT":
