@@ -661,6 +661,22 @@ def format_score(
 # ============================================================
 
 
+def is_excluded_job_location(job: dict[str, Any]) -> bool:
+    """Exclude jobs explicitly located in the US, Canada, or India."""
+    import re
+
+    country = str(job.get("country") or job.get("raw_country") or "")
+    location = str(job.get("location") or "")
+
+    excluded = re.compile(
+        r"\b(united states(?: of america)?|u\.s\.a?\.?|usa|canada|india)\b",
+        re.IGNORECASE,
+    )
+
+    # Explicit country metadata takes priority; location catches common
+    # listings where the country is embedded in the location string.
+    return bool(excluded.search(country) or excluded.search(location))
+
 def run_live_job_search() -> dict[str, Any]:
 
     strategy = SearchStrategy()
@@ -773,9 +789,12 @@ def run_live_job_search() -> dict[str, Any]:
     # Normalization
     # --------------------------------------------------------
 
-    normalized_jobs = normalize_jobs(
-        unique_jobs
-    )
+    eligible_jobs = [
+        job for job in unique_jobs
+        if not is_excluded_job_location(job)
+    ]
+
+    normalized_jobs = normalize_jobs(eligible_jobs)
 
     save_jobs(
         normalized_jobs,
@@ -933,7 +952,6 @@ def restore_recent_jobs() -> list[dict[str, Any]]:
 
     recent_jobs = get_recent_jobs(days=7)
 
-
     ba_jobs = [
         job
         for job in recent_jobs
@@ -946,6 +964,7 @@ def restore_recent_jobs() -> list[dict[str, Any]]:
         and (
             job.get("review_status") or "PENDING"
         ).upper() != "DISMISSED"
+        and not is_excluded_job_location(job)
     ]
 
 
@@ -1324,6 +1343,7 @@ elif page=='Job Discovery':
         job for job in jobs
         if str(job.get("review_status") or "PENDING").upper()
         != "DISMISSED"
+        and not is_excluded_job_location(job)
     ]
     # Independent catalogue filters.
     role_filter = st.selectbox(
