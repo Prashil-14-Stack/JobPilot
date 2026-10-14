@@ -230,23 +230,6 @@ class OutreachTracker:
                 ).value
                 or ""
             ).upper()
-
-            allowed_transitions = {
-                "DRAFT": {"APPROVED"},
-            }
-
-            normalized_current = str(current_status or "").upper()
-            normalized_target = str(status or "").upper()
-
-            if normalized_target not in allowed_transitions.get(
-                normalized_current, set()
-            ):
-                raise PermissionError(
-                    f"Invalid outreach status transition for {run_id}: "
-                    f"{normalized_current or 'UNKNOWN'} -> "
-                    f"{normalized_target or 'UNKNOWN'}."
-                )
-
             if current_status != "SENDING":
                 raise PermissionError(
                     f"Outreach {run_id} must be "
