@@ -287,6 +287,47 @@ class JobDatabase:
                 """
             )
 
+        # --------------------------------------------------
+        # Schema migration: application_status
+        # --------------------------------------------------
+
+        cursor.execute("PRAGMA table_info(jobs)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        if "application_status" not in columns:
+            cursor.execute(
+                """
+                ALTER TABLE jobs
+                ADD COLUMN application_status TEXT
+                DEFAULT 'NOT_APPLIED'
+                """
+            )
+
+        if "applied_at" not in columns:
+            cursor.execute(
+                """
+                ALTER TABLE jobs
+                ADD COLUMN applied_at TEXT
+                """
+            )
+
+        # --------------------------------------------------
+        # Schema migration: contact_status
+        # --------------------------------------------------
+
+        cursor.execute("PRAGMA table_info(jobs)")
+        columns = {row[1] for row in cursor.fetchall()}
+
+        if "contact_status" not in columns:
+            cursor.execute(
+                """
+                ALTER TABLE jobs
+                ADD COLUMN contact_status TEXT
+                DEFAULT 'NOT_CONTACTED'
+                """
+            )
+
+
         self.connection.commit()
 
     # --------------------------------------------------

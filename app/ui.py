@@ -1124,6 +1124,35 @@ def approve_and_send(
     )
 
 
+def mark_outreach_job_contacted(
+    run_id: str,
+    result: dict[str, Any],
+) -> bool:
+    """Mark a job contacted only when sending is confirmed and linked."""
+
+    if result.get("status") != "SENT":
+        return False
+
+    if not result.get("gmail_message_id"):
+        return False
+
+    tracker = OutreachTracker()
+    outreach = tracker.get_outreach(run_id)
+
+    if not outreach:
+        return False
+
+    try:
+        job_id = int(outreach.get("Job ID"))
+    except (TypeError, ValueError):
+        return False
+
+    store = JobStore()
+    try:
+        return store.mark_contacted(job_id)
+    finally:
+        store.database.connection.close()
+
 # ============================================================
 # ============================================================
 # JOBPILOT PROFESSIONAL DASHBOARD
@@ -1200,6 +1229,40 @@ def _jp_job_card(job, idx, with_contacts=True):
         with d:
             url=job.get('apply_url') or job.get('source_url')
             if url:st.link_button('View Job ↗',url,use_container_width=True)
+            jid = job.get("id")
+            application_status = str(
+                job.get("application_status") or "NOT_APPLIED"
+            ).upper()
+
+            if application_status == "APPLIED":
+                st.button(
+                    "✓ Applied",
+                    key=f"jp_applied_{key}",
+                    disabled=True,
+                    use_container_width=True,
+                )
+            elif st.button(
+                "Apply",
+                key=f"jp_apply_{key}",
+                use_container_width=True,
+            ):
+                if jid is None:
+                    st.error("Database ID missing; cannot save application status.")
+                else:
+                    store = JobStore()
+                    try:
+                        ok = store.apply_job(int(jid))
+                    finally:
+                        store.database.connection.close()
+
+                    if ok:
+                        for item in st.session_state.get("recent_jobs", []):
+                            if get_job_key(item) == key:
+                                item["application_status"] = "APPLIED"
+                        st.rerun()
+                    else:
+                        st.error("Could not save application status.")
+
             if st.button('✕ Dismiss',key=f'jp_dismiss_{key}',use_container_width=True):
                 jid=job.get('id')
                 if jid is None:st.error('Database ID missing; cannot dismiss this job.')
@@ -1247,14 +1310,22 @@ def _jp_job_card(job, idx, with_contacts=True):
                             st.text_input('Subject',value=draft.subject,disabled=True,key=f'jp_sub_{rid}')
                             st.text_area('Email body',value=draft.body,disabled=True,key=f'jp_body_{rid}',height=160)
                             if st.button('Approve & Send',type='primary',key=f'jp_send_{rid}'):
-                                try:     
+                                try:
                                     result = approve_and_send(rid)
-
                                     if result.get("status") == "SENT":
-                                        st.success("Email accepted by the sending service.")
+                                        if mark_outreach_job_contacted(rid, result):
+                                            st.success("Email sent successfully. Job marked CONTACTED.")
+                                        else:
+                                            st.warning(
+                                                "Email was sent, but the job's CONTACTED status "
+                                                "could not be saved. Reconcile the outreach record."
+                                            )
                                     else:
                                         st.error(f"Email sending failed: {result}")
-                                except Exception as exc:st.error(f'Email send failed: {exc}')
+
+                                except Exception as exc:
+                                    st.error(f"Email send failed: {exc}")
+
 with st.sidebar:
     st.markdown('<div class="jp-brand">🎯 JobPilot</div>',unsafe_allow_html=True)
     st.markdown('<div class="jp-tagline">Find. Connect. Outreach. Grow.</div>',unsafe_allow_html=True)
@@ -1483,15 +1554,28 @@ elif page=='Outreach':
                         'This email may already have been delivered. '
                         'Check Gmail Sent and reconcile the tracker before any retry.'
                     )
-                if str(rec.get('Status','')).upper() == 'DRAFT' and st.button('Approve & Send selected email',type='primary',key=f'jp_approve_{selected}'):
-                    try:                  
+
+                if str(rec.get('Status', '')).upper() == 'DRAFT' and st.button(
+                    'Approve & Send selected email',
+                    type='primary',
+                    key=f'jp_approve_{selected}',
+                ):
+                    try:
                         result = approve_and_send(selected)
+
                         if result.get("status") == "SENT":
-                            st.success("Email accepted by the sending service.")
+                            if mark_outreach_job_contacted(selected, result):
+                                st.success("Email sent successfully. Job marked CONTACTED.")
+                            else:
+                                st.warning(
+                                    "Email was sent, but the job's CONTACTED status "
+                                    "could not be saved. Reconcile the outreach record."
+                                )
                         else:
                             st.error(f"Email sending failed: {result}")
-                        st.rerun()
-                    except Exception as exc:st.error(f'Could not send: {exc}')
+                    except Exception as exc:
+                        st.error(f"Could not send: {exc}")
+
     else:st.info('No outreach records found. Generate a draft from a job contact panel.')
 elif page=='Follow-ups':
     st.markdown('<div class="jp-welcome">Follow-ups</div>',unsafe_allow_html=True);st.info('The current tracker does not store follow-up dates or replies, so JobPilot cannot calculate a real due count yet.')

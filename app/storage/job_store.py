@@ -538,6 +538,48 @@ class JobStore:
 
         return cursor.rowcount > 0
 
+    def apply_job(self, job_id: int) -> bool:
+        """Persist a user's application status independently of review status."""
+
+        cursor = self.database.connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE jobs
+            SET application_status = 'APPLIED',
+                applied_at = COALESCE(applied_at, ?),
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                self.utc_now(),
+                self.utc_now(),
+                job_id,
+            ),
+        )
+
+        self.database.connection.commit()
+
+        return cursor.rowcount > 0
+
+    def mark_contacted(self, job_id: int) -> bool:
+        """Persist confirmed outreach independently of review/application status."""
+
+        cursor = self.database.connection.cursor()
+
+        cursor.execute(
+            """
+            UPDATE jobs
+            SET contact_status = 'CONTACTED',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (self.utc_now(), job_id),
+        )
+
+        self.database.connection.commit()
+        return cursor.rowcount > 0
+
     def get_pending_review_jobs(
         self,
         limit: int = 10,
