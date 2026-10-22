@@ -409,13 +409,6 @@ def login_page() -> None:
         st.markdown("""
         <div class="jp-login-card">
             <h2>Welcome Back</h2>
-            <p>Sign in to access your JobPilot workspace.</p>
-        </div>
-        """, unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="jp-login-card">
-            <h2>Welcome Back</h2>
             <p>Sign in securely with your Google account to access your JobPilot workspace.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -1198,7 +1191,7 @@ st.markdown("<style>"
 def _jp_snapshot():
     db=JobDatabase()
     try:
-        c=db.connection; jc={r[1] for r in c.execute('PRAGMA table_info(jobs)')}; cc={r[1] for r in c.execute('PRAGMA table_info(contacts)')}
+        c=db.connection; jc={r[1] for r in c.execute('PRAGMA table_info(jobs)').fetchall()}; cc={r[1] for r in c.execute('PRAGMA table_info(contacts)').fetchall()}
         jobs=c.execute('SELECT COUNT(*) FROM jobs').fetchone()[0] if jc else 0
         job_ids = [
             row[0] for row in c.execute("SELECT id FROM jobs").fetchall()
