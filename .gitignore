@@ -1,11 +1,10 @@
-credentials.json
-token.json.streamlit/secrets.toml
-cat > .gitignore <<'EOF'
-# Environment / secrets
+# Environment and secrets
 .env
 .streamlit/secrets.toml
 credentials.json
 token.json
+*.pem
+*.key
 
 # Python
 .venv/
@@ -18,27 +17,15 @@ __pycache__/
 *.sqlite
 *.sqlite3
 
-# Candidate / personal data
-data/candidate/cv/
-data/candidate/current_profile.json
-data/candidate/profiles/
+# Candidate and personal data
+data/candidate/
+candidate_profile.json
 
-# Generated job/outreach data
+# Generated job and outreach data
 data/jobs/
 data/exports/
 
-# OS / IDE
+# OS and IDE
 .DS_Store
 .vscode/
 .idea/
-EOF
-# macOS
-.DS_Store
-
-# Candidate profile configuration
-candidate_profile.json
-
-# Candidate data
-/data/candidate/
-
-token.json.backup

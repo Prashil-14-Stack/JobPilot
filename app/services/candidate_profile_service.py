@@ -45,16 +45,26 @@ class CandidateProfileService:
         "role_signals",
     ]
 
-    def __init__(self):
-        CANDIDATE_DIR.mkdir(
-            parents=True,
-            exist_ok=True,
+    def __init__(self, user_id: str | None = None):
+        # Keep legacy paths for older scripts that do not supply a user ID.
+        # The authenticated application must always supply the verified ID.
+        if user_id:
+            from app.services.user_context import get_user_profile_directory
+
+            self.candidate_dir = get_user_profile_directory(user_id)
+        else:
+            self.candidate_dir = CANDIDATE_DIR
+
+        self.profiles_dir = self.candidate_dir / "profiles"
+        self.current_profile_path = (
+            self.candidate_dir / "current_profile.json"
+        )
+        self.profile_delta_path = (
+            self.candidate_dir / "profile_delta.json"
         )
 
-        PROFILES_DIR.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
+        self.candidate_dir.mkdir(parents=True, exist_ok=True)
+        self.profiles_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def utc_now() -> str:
@@ -66,10 +76,10 @@ class CandidateProfileService:
         self,
     ) -> dict[str, Any] | None:
 
-        if not CURRENT_PROFILE_PATH.exists():
+        if not self.current_profile_path.exists():
             return None
 
-        with CURRENT_PROFILE_PATH.open(
+        with self.current_profile_path.open(
             "r",
             encoding="utf-8",
         ) as file:
@@ -334,7 +344,7 @@ class CandidateProfileService:
             )
 
             # Save normalized current profile
-            with CURRENT_PROFILE_PATH.open(
+            with self.current_profile_path.open(
                 "w",
                 encoding="utf-8",
             ) as file:
@@ -346,7 +356,7 @@ class CandidateProfileService:
                 )
 
             # Save delta
-            with PROFILE_DELTA_PATH.open(
+            with self.profile_delta_path.open(
                 "w",
                 encoding="utf-8",
             ) as file:
@@ -386,7 +396,7 @@ class CandidateProfileService:
         # ---------------------------------------------------------
 
         versioned_profile_path = (
-            PROFILES_DIR
+            self.profiles_dir
             / f"profile_{new_version}.json"
         )
 
@@ -405,7 +415,7 @@ class CandidateProfileService:
         # 10. Save current profile
         # ---------------------------------------------------------
 
-        with CURRENT_PROFILE_PATH.open(
+        with self.current_profile_path.open(
             "w",
             encoding="utf-8",
         ) as file:
@@ -420,7 +430,7 @@ class CandidateProfileService:
         # 11. Save capability delta
         # ---------------------------------------------------------
 
-        with PROFILE_DELTA_PATH.open(
+        with self.profile_delta_path.open(
             "w",
             encoding="utf-8",
         ) as file:

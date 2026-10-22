@@ -41,12 +41,25 @@ class OutreachTracker:
     def __init__(
         self,
         output_path: Path | None = None,
+        user_id: str | None = None,
     ) -> None:
+        if output_path is not None:
+            # Explicit paths are retained for isolated tests and maintenance.
+            self.output_path = Path(output_path)
+        else:
+            if not user_id or "@" not in user_id.strip():
+                raise ValueError(
+                    "A valid authenticated user_id is required for outreach tracking."
+                )
 
-        self.output_path = (
-            output_path
-            or self.OUTPUT_PATH
-        )
+            from app.services.user_context import get_user_profile_directory
+
+            self.output_path = (
+                get_user_profile_directory(user_id.strip().lower())
+                / "jobpilot_outreach_tracker.xlsx"
+            )
+
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
     def _ensure_columns(
         self,
         worksheet,

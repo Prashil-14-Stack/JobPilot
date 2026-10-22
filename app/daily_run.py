@@ -18,6 +18,12 @@ from app.storage.job_store import JobStore
 
 
 def main():
+    raise SystemExit(
+        "Standalone JobPilot daily runner is disabled in multi-user mode. "
+        "Use the authenticated Streamlit UI so candidate-specific scoring "
+        "does not use a shared profile."
+    )
+
     print("=" * 60)
     print("JOBPILOT DAILY RUN")
     print("=" * 60)

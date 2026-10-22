@@ -17,21 +17,33 @@ class JobDatabase:
     processing/analysis state.
     """
 
-    def __init__(self, database_path: Path = DATABASE_PATH):
+    def __init__(
+        self,
+        database_path: Path = DATABASE_PATH,
+        backend: str = "sqlite",
+        database_url: str | None = None,
+    ):
+        from app.storage.connection_factory import create_connection
+
         self.database_path = Path(database_path)
+        self.backend = backend.strip().lower()
 
-        self.database_path.parent.mkdir(
-            parents=True,
-            exist_ok=True
+        raw_connection, self.backend = create_connection(
+            self.database_path,
+            database_url=database_url,
+            backend=self.backend,
         )
 
-        self.connection = sqlite3.connect(
-            self.database_path
-        )
+        from app.storage.database_adapter import DatabaseAdapter
 
-        self.connection.row_factory = sqlite3.Row
+        self.connection = DatabaseAdapter(raw_connection, self.backend)
 
-        self.initialize()
+        if self.backend == "postgres":
+            from app.storage.postgres_schema import initialize_postgres
+
+            initialize_postgres(self.connection)
+        else:
+            self.initialize()
 
     # --------------------------------------------------
     # Database initialization

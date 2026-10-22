@@ -35,8 +35,22 @@ SCOPES = [
 
 class GmailSender:
 
-    def __init__(self):
+    def __init__(self, user_id: str | None = None):
+        if not user_id or "@" not in user_id:
+            raise ValueError(
+                "A verified authenticated user_id is required for Gmail access."
+            )
 
+        import hashlib
+
+        user_key = hashlib.sha256(
+            user_id.strip().lower().encode("utf-8")
+        ).hexdigest()
+
+        from app.services.user_context import get_user_profile_directory
+
+        user_directory = get_user_profile_directory(user_id)
+        self.token_path = user_directory / "gmail_token.json"
         self.service = self._authenticate()
 
     # ========================================================
@@ -47,10 +61,10 @@ class GmailSender:
 
         credentials = None
 
-        if TOKEN_PATH.exists():
+        if self.token_path.exists():
 
             credentials = Credentials.from_authorized_user_file(
-                TOKEN_PATH,
+                self.token_path,
                 SCOPES
             )
 
@@ -95,7 +109,7 @@ class GmailSender:
                 port=0
             )
 
-            TOKEN_PATH.write_text(
+            self.token_path.write_text(
                 credentials.to_json(),
                 encoding="utf-8"
             )

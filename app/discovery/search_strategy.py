@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 import json
 
 from pydantic import BaseModel, Field
+from app.services.user_context import get_user_profile_directory
 
 
 PROJECT_ROOT = (
@@ -22,7 +23,7 @@ CAPABILITY_REGISTRY_PATH = (
     / "source_capability_registry.json"
 )
 
-# Current versioned candidate profile.
+# Legacy profile path retained only for standalone compatibility.
 CANDIDATE_PROFILE_PATH = (
     PROJECT_ROOT
     / "data"
@@ -86,7 +87,9 @@ class SearchPlan(BaseModel):
 
 class SearchStrategy:
 
-    def __init__(self):
+    def __init__(self, user_id: str | None = None):
+
+        self.user_id = user_id.strip().lower() if user_id else None
 
         self.role_universe = (
             self.load_json(
@@ -100,11 +103,24 @@ class SearchStrategy:
             )
         )
 
-        self.candidate_profile = (
-            self.load_json(
-                CANDIDATE_PROFILE_PATH,
-                required=True
+        if self.user_id:
+            self.candidate_profile_path = (
+                get_user_profile_directory(self.user_id)
+                / "current_profile.json"
             )
+            self.search_plan_path = (
+                get_user_profile_directory(self.user_id)
+                / "search_plan.json"
+            )
+        else:
+            # Preserve the legacy standalone behavior. Authenticated UI
+            # callers must pass user_id and never use these shared paths.
+            self.candidate_profile_path = CANDIDATE_PROFILE_PATH
+            self.search_plan_path = SEARCH_PLAN_PATH
+
+        self.candidate_profile = self.load_json(
+            self.candidate_profile_path,
+            required=True,
         )
 
     # --------------------------------------------------
@@ -1227,18 +1243,15 @@ class SearchStrategy:
     # Save
     # --------------------------------------------------
 
-    @staticmethod
-    def save(
-        plan: SearchPlan
-    ):
+    def save(self, plan: SearchPlan):
 
-        SEARCH_PLAN_PATH.parent.mkdir(
+        self.search_plan_path.parent.mkdir(
             parents=True,
             exist_ok=True
         )
 
         with open(
-            SEARCH_PLAN_PATH,
+            self.search_plan_path,
             "w",
             encoding="utf-8"
         ) as file:
@@ -1251,13 +1264,8 @@ class SearchStrategy:
             )
 
         print()
-        print(
-            "Search plan saved to:"
-        )
-
-        print(
-            SEARCH_PLAN_PATH
-        )
+        print("Search plan saved to:")
+        print(self.search_plan_path)
 
     # --------------------------------------------------
     # Run

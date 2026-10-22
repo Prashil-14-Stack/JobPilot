@@ -17,8 +17,48 @@ class ContactStore:
     def __init__(
         self,
         database: JobDatabase,
+        user_id: str | None = None,
     ) -> None:
+        if not user_id or "@" not in user_id.strip():
+            raise ValueError(
+                "A valid authenticated user_id is required for contact storage."
+            )
+
+        import sqlite3
+        from app.services.user_context import get_user_profile_directory
+
         self.database = database
+        self.user_id = user_id.strip().lower()
+        contacts_path = (
+            get_user_profile_directory(self.user_id) / "contacts.db"
+        )
+        self.connection = sqlite3.connect(contacts_path)
+        self.connection.row_factory = sqlite3.Row
+
+        self.connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS contacts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                contact_id TEXT NOT NULL UNIQUE,
+                first_name TEXT,
+                last_name TEXT,
+                full_name TEXT,
+                email TEXT,
+                position TEXT,
+                company TEXT,
+                company_domain TEXT,
+                linkedin_url TEXT,
+                email_confidence INTEGER,
+                email_verification_status TEXT,
+                source TEXT DEFAULT 'Hunter',
+                first_seen_at TEXT,
+                last_seen_at TEXT,
+                created_at TEXT,
+                updated_at TEXT
+            )
+            """
+        )
+        self.connection.commit()
 
     # --------------------------------------------------
     # Insert / Update
@@ -38,7 +78,7 @@ class ContactStore:
         now = datetime.now(timezone.utc).isoformat()
 
         if existing is None:
-            self.database.connection.execute(
+            self.connection.execute(
                 """
                 INSERT INTO contacts (
                     contact_id,
@@ -83,11 +123,11 @@ class ContactStore:
                 ),
             )
 
-            self.database.connection.commit()
+            self.connection.commit()
 
             return "NEW"
 
-        self.database.connection.execute(
+        self.connection.execute(
             """
             UPDATE contacts
             SET
@@ -124,7 +164,7 @@ class ContactStore:
             ),
         )
 
-        self.database.connection.commit()
+        self.connection.commit()
 
         return "UPDATED"
 
@@ -137,7 +177,7 @@ class ContactStore:
         contact_id: str,
     ) -> Optional[Any]:
 
-        cursor = self.database.connection.cursor()
+        cursor = self.connection.cursor()
 
         cursor.execute(
             """
@@ -159,7 +199,7 @@ class ContactStore:
         email: str,
     ) -> Optional[Any]:
 
-        cursor = self.database.connection.cursor()
+        cursor = self.connection.cursor()
 
         cursor.execute(
             """
@@ -181,7 +221,7 @@ class ContactStore:
         company_domain: str,
     ) -> list[Any]:
 
-        cursor = self.database.connection.cursor()
+        cursor = self.connection.cursor()
 
         cursor.execute(
             """
@@ -201,7 +241,7 @@ class ContactStore:
 
     def count_contacts(self) -> int:
 
-        cursor = self.database.connection.cursor()
+        cursor = self.connection.cursor()
 
         cursor.execute(
             """

@@ -4,7 +4,7 @@ import time
 
 from openpyxl import load_workbook
 
-from app.networking.approval_processor import process_approval
+from app.networking.approval_processor import ApprovalProcessor
 from app.networking.outreach_tracker import OutreachTracker
 
 
@@ -38,11 +38,19 @@ class ApprovalWatcher:
     def __init__(
         self,
         tracker: OutreachTracker | None = None,
+        user_id: str | None = None,
     ) -> None:
 
+        if not user_id or "@" not in user_id.strip():
+            raise ValueError(
+                "A valid authenticated user_id is required for the approval watcher."
+            )
+
+        self.user_id = user_id.strip().lower()
         self.tracker = (
             tracker
-            or OutreachTracker()
+            if tracker is not None
+            else OutreachTracker(user_id=self.user_id)
         )
 
     def find_processable_records(
@@ -122,9 +130,11 @@ class ApprovalWatcher:
 
             try:
 
-                result = process_approval(
-                    run_id
+                processor = ApprovalProcessor(
+                    tracker=self.tracker,
+                    user_id=self.user_id,
                 )
+                result = processor.process(run_id)
 
                 results.append(
                     result
@@ -184,7 +194,8 @@ class ApprovalWatcher:
 
 
 if __name__ == "__main__":
-
-    watcher = ApprovalWatcher()
-
-    watcher.run()
+    raise SystemExit(
+        "Standalone approval watching is disabled because it has no "
+        "authenticated user context. Start it through an authenticated "
+        "workflow with a user-specific OutreachTracker."
+    )

@@ -1,6 +1,6 @@
 from pathlib import Path
 from typing import Any
-
+import shutil
 from app.readers.cv_reader import CVReader
 from app.services.cv_profile_analyzer import CVProfileAnalyzer
 from app.services.capability_normalizer import CapabilityNormalizer
@@ -34,6 +34,7 @@ class CVIngestionService:
         cv_reader: CVReader | None = None,
         profile_analyzer: CVProfileAnalyzer | None = None,
         profile_service: CandidateProfileService | None = None,
+        user_id: str | None = None,
     ):
         self.cv_reader = (
             cv_reader
@@ -47,9 +48,9 @@ class CVIngestionService:
 
         self.profile_service = (
             profile_service
-            or CandidateProfileService()
+            or CandidateProfileService(user_id=user_id)
         )
-
+        self.user_id = user_id
     def validate_cv(
         self,
         cv_path: Path,
@@ -100,7 +101,13 @@ class CVIngestionService:
         cv_path = Path(cv_path)
 
         self.validate_cv(cv_path)
+        # Persist the original CV in the authenticated user's directory.
+        if self.user_id:
+            from app.services.user_context import get_user_profile_directory
 
+            profile_dir = get_user_profile_directory(self.user_id)
+            saved_cv_path = profile_dir / f"current_cv{cv_path.suffix.lower()}"
+            shutil.copy2(cv_path, saved_cv_path)
         # -------------------------------------------------
         # 1. Read CV
         # -------------------------------------------------

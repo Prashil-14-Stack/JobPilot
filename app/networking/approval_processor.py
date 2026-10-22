@@ -29,14 +29,27 @@ class ApprovalProcessor:
         self,
         tracker: OutreachTracker | None = None,
         sender: GmailSender | None = None,
+        user_id: str | None = None,
     ) -> None:
 
+        if not user_id or "@" not in user_id.strip():
+            raise ValueError(
+                "A valid authenticated user_id is required for outreach processing."
+            )
+
+        self.user_id = user_id.strip().lower()
         self.tracker = (
             tracker
-            or OutreachTracker()
+            if tracker is not None
+            else OutreachTracker(user_id=self.user_id)
         )
-
         self.sender = sender
+
+    @staticmethod
+    def sender_user_context_missing(sender, user_id):
+        # A preconfigured sender is allowed only when the trusted caller
+        # has already supplied the authenticated user identity.
+        return not user_id
 
     def process(
         self,
@@ -80,7 +93,7 @@ class ApprovalProcessor:
         try:
 
             if self.sender is None:
-                self.sender = GmailSender()
+                self.sender = GmailSender(user_id=self.user_id)
 
             result = self.sender.send(
                 recipient=outreach["Contact Email"],
@@ -159,9 +172,8 @@ class ApprovalProcessor:
 def process_approval(
     run_id: str,
 ) -> dict:
-
-    processor = ApprovalProcessor()
-
-    return processor.process(
-        run_id
+    raise RuntimeError(
+        "Unauthenticated approval processing is disabled. "
+        "Use an authenticated workflow with a user-specific "
+        "ApprovalProcessor and OutreachTracker."
     )

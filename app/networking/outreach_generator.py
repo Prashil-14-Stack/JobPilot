@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 
 from app.networking.outreach import OutreachMessage
-
+from app.services.user_context import get_user_profile_directory
 
 class OutreachGenerator:
     """
@@ -15,16 +15,27 @@ class OutreachGenerator:
     The generator only uses experience and capabilities
     supported by the candidate profile.
     """
-
-    MASTER_CV_PATH = Path(
-        "data/candidate/cv/current_cv.pdf"
-    )
-
     def __init__(
         self,
         candidate_profile: dict[str, Any],
+        user_id: str | None = None,
     ) -> None:
+        if not user_id or "@" not in user_id.strip():
+            raise ValueError(
+                "A verified authenticated user_id is required "
+                "for personalized outreach."
+            )
+
         self.candidate_profile = candidate_profile
+        self.user_id = user_id.strip().lower()
+
+        profile_dir = get_user_profile_directory(self.user_id)
+        cv_files = sorted(
+            profile_dir.glob("current_cv.*"),
+            key=lambda item: item.stat().st_mtime,
+            reverse=True,
+        )
+        self.cv_path = cv_files[0] if cv_files else None
 
     def generate(
         self,
@@ -83,9 +94,7 @@ class OutreachGenerator:
             role=role,
             subject=subject,
             body=body,
-            cv_path=str(
-                self.MASTER_CV_PATH
-            ),
+            cv_path=str(self.cv_path) if self.cv_path else "",
             job_id=job.get("id"),
             status="DRAFT",
         )

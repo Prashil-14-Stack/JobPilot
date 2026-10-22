@@ -87,6 +87,11 @@ def build_contact_discovery(
 
 
 def main() -> None:
+    raise SystemExit(
+        "Standalone JobPilot batch runner is disabled in multi-user mode. "
+        "Use the authenticated Streamlit UI so candidate profiles, contacts, "
+        "and outreach records remain user-scoped."
+    )
 
     print()
     print("=" * 70)
@@ -182,8 +187,13 @@ def main() -> None:
 
     print("\n[3/8] Normalizing jobs...")
 
+    eligible_jobs = [
+        job for job in unique_jobs
+        if not is_excluded_job_location(job)
+    ]
+
     normalized_jobs = normalize_jobs(
-        unique_jobs
+        eligible_jobs
     )
 
     save_jobs(

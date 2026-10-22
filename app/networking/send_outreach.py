@@ -10,9 +10,17 @@ from app.networking.approval_processor import ApprovalProcessor
 def send_outreach(
     run_id: str,
     dry_run: bool = False,
+    user_id: str | None = None,
 ) -> dict:
 
-    tracker = OutreachTracker()
+    if not user_id:
+        raise ValueError(
+            "A verified user_id is required to send outreach. "
+            "Use the authenticated JobPilot UI or provide the "
+            "verified account identity from a trusted caller."
+        )
+
+    tracker = OutreachTracker(user_id=user_id)
 
     outreach = tracker.get_outreach(
         run_id
@@ -31,7 +39,7 @@ def send_outreach(
         status
     )
 
-    sender = GmailSender()
+    sender = GmailSender(user_id=user_id)
 
     message = sender.build_message(
         recipient=outreach["Contact Email"],
@@ -69,6 +77,7 @@ def send_outreach(
     processor = ApprovalProcessor(
         tracker=tracker,
         sender=sender,
+        user_id=user_id,
     )
 
     return processor.process(run_id)
@@ -83,6 +92,11 @@ if __name__ == "__main__":
             "python -m app.networking.send_outreach "
             "<run_id> [--dry-run]"
         )
+
+    raise SystemExit(
+        "Direct CLI sending is disabled because it has no authenticated "
+        "JobPilot user context. Use the authenticated UI instead."
+    )
 
     run_id = sys.argv[1]
 

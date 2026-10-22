@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 import re
@@ -19,89 +20,48 @@ def parse_posted_date(
     posted_date: str | None,
     now: datetime | None = None,
 ) -> datetime | None:
-    """
-    Convert a JobPilot posted_date value into
-    an absolute datetime.
-
-    Supported examples:
-
-        17 minutes ago
-        5 hours ago
-        3 days ago
-        1 week ago
-        2026-10-02
-
-    Returns None when the value cannot be interpreted.
-    """
-
+    """Parse relative dates, ISO timestamps, and YYYY-MM-DD dates."""
     if not posted_date:
         return None
 
     value = str(posted_date).strip()
-
     now = now or datetime.now().astimezone()
 
     match = RECENCY_PATTERN.match(value)
-
     if match:
-
-        amount = int(
-            match.group(1)
-        )
-
-        unit = (
-            match.group(2)
-            .lower()
-        )
+        amount = int(match.group(1))
+        unit = match.group(2).lower()
 
         if unit.startswith("minute"):
-            delta = timedelta(
-                minutes=amount
-            )
-
+            delta = timedelta(minutes=amount)
         elif unit.startswith("hour"):
-            delta = timedelta(
-                hours=amount
-            )
-
+            delta = timedelta(hours=amount)
         elif unit.startswith("day"):
-            delta = timedelta(
-                days=amount
-            )
-
+            delta = timedelta(days=amount)
         elif unit.startswith("week"):
-            delta = timedelta(
-                weeks=amount
-            )
-
+            delta = timedelta(weeks=amount)
         elif unit.startswith("month"):
-            delta = timedelta(
-                days=amount * 30
-            )
-
+            delta = timedelta(days=amount * 30)
         elif unit.startswith("year"):
-            delta = timedelta(
-                days=amount * 365
-            )
-
+            delta = timedelta(days=amount * 365)
         else:
             return None
 
         return now - delta
 
+    # Support ISO 8601 timestamps, including UTC offsets and Z suffixes.
     try:
-
-        parsed_date = datetime.strptime(
-            value,
-            "%Y-%m-%d",
-        )
-
-        return parsed_date.replace(
-            tzinfo=now.tzinfo
-        )
-
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=now.tzinfo)
+        return parsed.astimezone(now.tzinfo)
     except ValueError:
+        pass
 
+    try:
+        parsed = datetime.strptime(value, "%Y-%m-%d")
+        return parsed.replace(tzinfo=now.tzinfo)
+    except ValueError:
         return None
 
 
@@ -110,71 +70,56 @@ def is_posted_within_days(
     days: int = 7,
     now: datetime | None = None,
 ) -> bool:
-    """
-    Return True when the job was posted within
-    the specified number of days.
-
-    Unparseable dates return False.
-    """
-
+    """Return True if a parsed date falls within the requested window."""
     if days < 0:
-        raise ValueError(
-            "days must be >= 0"
-        )
+        raise ValueError("days must be >= 0")
 
     now = now or datetime.now().astimezone()
-
-    parsed_date = parse_posted_date(
-        posted_date,
-        now=now,
-    )
+    parsed_date = parse_posted_date(posted_date, now=now)
 
     if parsed_date is None:
         return False
 
-    cutoff = (
-        now - timedelta(days=days)
-    )
+    cutoff = now - timedelta(days=days)
+    return cutoff <= parsed_date <= now
 
-    return parsed_date >= cutoff
 
 def get_recent_jobs(
     days: int = 7,
     limit: int | None = None,
 ) -> list[dict]:
-    """
-    Return jobs posted within the specified number of days.
+    """Return recently posted or newly discovered jobs."""
+    if days < 0:
+        raise ValueError("days must be >= 0")
 
-    Jobs with missing or unparseable posted dates are excluded.
-    """
-
-    db = sqlite3.connect(DB_PATH)
-    db.row_factory = sqlite3.Row
-
-    query = """
-        SELECT *
-        FROM jobs
-        WHERE posted_date IS NOT NULL
-    """
-
-    if limit is not None:
-        query += f" LIMIT {int(limit)}"
-
-    rows = db.execute(query).fetchall()
-    db.close()
+    with sqlite3.connect(DB_PATH) as db:
+        db.row_factory = sqlite3.Row
+        query = "SELECT * FROM jobs"
+        if limit is not None:
+            query += " LIMIT ?"
+            rows = db.execute(query, (max(0, int(limit)),)).fetchall()
+        else:
+            rows = db.execute(query).fetchall()
 
     recent_jobs = []
 
     for row in rows:
+        job = dict(row)
+        posted_date = job.get("posted_date")
 
-        if not is_posted_within_days(
-            row["posted_date"],
-            days=days,
-        ):
+        # Prefer the actual posting date when it can be parsed.
+        if parse_posted_date(posted_date) is not None:
+            if is_posted_within_days(posted_date, days=days):
+                recent_jobs.append(job)
             continue
 
-        recent_jobs.append(
-            dict(row)
+        # Otherwise use the earliest available discovery timestamp.
+        fallback_date = (
+            job.get("first_seen_at")
+            or job.get("discovered_at")
         )
+
+        if is_posted_within_days(fallback_date, days=days):
+            recent_jobs.append(job)
 
     return recent_jobs

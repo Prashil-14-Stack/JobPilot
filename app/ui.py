@@ -413,69 +413,54 @@ def login_page() -> None:
         </div>
         """, unsafe_allow_html=True)
 
-        with st.form("login_form"):
-            username = st.text_input(
-                "Username",
-                placeholder="Enter your username",
-            )
-            password = st.text_input(
-                "Password",
-                type="password",
-                placeholder="Enter your password",
-            )
-            submitted = st.form_submit_button(
-                "Login  →",
-                type="primary",
-                use_container_width=True,
-            )
-
-            if submitted:
-                expected_username = st.secrets["auth"]["username"]
-                expected_password = st.secrets["auth"]["password"]
-
-                if (
-                    username == expected_username
-                    and password == expected_password
-                ):
-                    st.session_state.authenticated = True
-                    st.rerun()
-                else:
-                    st.error("Invalid username or password.")
-
         st.markdown("""
-        <div class="jp-secure-note">
-            <div class="jp-secure-icon">🛡️</div>
-            <div>
-                <div class="jp-secure-title">Secure Access</div>
-                <div class="jp-secure-description">
-                    Your workspace is protected by your configured credentials.
-                </div>
-            </div>
+        <div class="jp-login-card">
+            <h2>Welcome Back</h2>
+            <p>Sign in securely with your Google account to access your JobPilot workspace.</p>
         </div>
         """, unsafe_allow_html=True)
 
+        if st.button(
+            "Continue with Google",
+            type="primary",
+            use_container_width=True,
+            key="google_login",
+        ):
+            st.login()
 
-if "authenticated" not in st.session_state:
+from app.services.user_context import get_authenticated_user_id
 
-    st.session_state.authenticated = False
-
-
-if not st.session_state.authenticated:
-
+# Show the custom sign-in screen before accessing protected app data.
+if not st.user.is_logged_in:
     login_page()
-
     st.stop()
+
+try:
+    AUTH_USER_ID = get_authenticated_user_id()
+except RuntimeError as exc:
+    st.error(f"Authentication configuration error: {exc}")
+    st.stop()
+
+# Restrict access to explicitly approved Google accounts.
+allowed_emails = {
+    str(email).strip().lower()
+    for email in st.secrets.get("allowed_emails", [])
+    if str(email).strip()
+}
+
+if not allowed_emails:
+    st.error("Access is not configured. Add your email to the allowed_emails deployment secret.")
+    st.stop()
+
+if str(AUTH_USER_ID).strip().lower() not in allowed_emails:
+    st.error("Access denied. This JobPilot deployment is private.")
+    st.stop()
+
 # -----------------------------
 # LOGOUT
 # -----------------------------
-
-if st.session_state.authenticated:
-    if st.sidebar.button(
-        "Logout",
-        use_container_width=True,
-    ):
-        st.session_state.authenticated = False
-        st.rerun()
+if st.sidebar.button("Logout", use_container_width=True):
+    st.logout()
 
 # ============================================================
 # SESSION STATE
@@ -547,21 +532,15 @@ def render_profile_value(value, level=0):
 
 
 def load_candidate_profile() -> dict[str, Any]:
-    profile_path = (
-        PROJECT_ROOT
-        / "data"
-        / "candidate"
-        / "current_profile.json"
-    )
+    from app.services.user_context import get_user_profile_directory
+
+    profile_dir = get_user_profile_directory(AUTH_USER_ID)
+    profile_path = profile_dir / "current_profile.json"
 
     if not profile_path.exists():
         return {}
 
-    with profile_path.open(
-        "r",
-        encoding="utf-8",
-    ) as file:
-
+    with profile_path.open("r", encoding="utf-8") as file:
         return json.load(file)
 
 
@@ -679,7 +658,7 @@ def is_excluded_job_location(job: dict[str, Any]) -> bool:
 
 def run_live_job_search() -> dict[str, Any]:
 
-    strategy = SearchStrategy()
+    strategy = SearchStrategy(user_id=AUTH_USER_ID)
 
     strategy.run()
 
@@ -826,7 +805,8 @@ def run_live_job_search() -> dict[str, Any]:
     for job in recent_jobs:
 
         result = score_job(
-            job
+            job,
+            candidate_profile=load_candidate_profile(),
         )
 
         job_store.update_job_score(
@@ -861,9 +841,11 @@ def run_live_job_search() -> dict[str, Any]:
         job
         for job in scored_jobs
         if is_ba_title(job.get("title"))
-        and (
-            job.get("review_status") or "PENDING"
-        ).upper() != "DISMISSED"
+    ]
+    ba_jobs = apply_user_job_statuses(ba_jobs)
+    ba_jobs = [
+        job for job in ba_jobs
+        if (job.get("review_status") or "PENDING").upper() != "DISMISSED"
     ]
 
     ba_jobs.sort(
@@ -947,10 +929,45 @@ def run_live_job_search() -> dict[str, Any]:
         st.session_state.search_report
     )
 
+def apply_user_job_statuses(
+    jobs: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Overlay personal status without changing shared job records."""
+    from app.storage.user_job_status_store import UserJobStatusStore
+
+    status_store = UserJobStatusStore(AUTH_USER_ID)
+    try:
+        statuses = status_store.get_all_statuses()
+    finally:
+        status_store.close()
+
+    result = []
+    for original in jobs:
+        job = dict(original)
+        job_id = job.get("id")
+
+        try:
+            personal = statuses.get(int(job_id), {}) if job_id is not None else {}
+        except (TypeError, ValueError):
+            personal = {}
+
+        job["application_status"] = personal.get(
+            "application_status", "NOT_APPLIED"
+        )
+        job["applied_at"] = personal.get("applied_at")
+        job["contact_status"] = personal.get(
+            "contact_status", "NOT_CONTACTED"
+        )
+        job["review_status"] = personal.get("review_status", "PENDING")
+        result.append(job)
+
+    return result
+
+
 def restore_recent_jobs() -> list[dict[str, Any]]:
     """Restore eligible Business Analyst jobs from SQLite."""
 
-    recent_jobs = get_recent_jobs(days=7)
+    recent_jobs = apply_user_job_statuses(get_recent_jobs(days=7))
 
     ba_jobs = [
         job
@@ -1034,7 +1051,8 @@ def discover_contacts(
     hunter = HunterClient()
 
     contact_store = ContactStore(
-        database
+        database,
+        user_id=AUTH_USER_ID,
     )
 
     relevance = ContactRelevanceAnalyzer()
@@ -1070,23 +1088,22 @@ def discover_contacts(
 # OUTREACH DRAFT
 # ============================================================
 
-
 def generate_draft(
     job: dict[str, Any],
     contact: dict[str, Any],
-):
-
+) -> dict[str, Any]:
+    """Generate a personalized outreach draft for a job contact."""
     profile = load_candidate_profile()
 
     generator = OutreachGenerator(
-        candidate_profile=profile
+        candidate_profile=profile,
+        user_id=AUTH_USER_ID,
     )
 
     return generator.generate(
         job=job,
         contact=contact,
     )
-
 
 # ============================================================
 # SEND APPROVED EMAIL
@@ -1096,8 +1113,9 @@ def generate_draft(
 def approve_and_send(
     run_id: str,
 ) -> dict[str, Any]:
+    """Send an outreach email only after validating its current status."""
+    tracker = OutreachTracker(user_id=AUTH_USER_ID)
 
-    tracker = OutreachTracker()
     outreach = tracker.get_outreach(run_id)
     current_status = str(
         (outreach or {}).get("Status", "")
@@ -1106,27 +1124,25 @@ def approve_and_send(
     if current_status != "DRAFT":
         raise PermissionError(
             f"Normal send is allowed only for DRAFT records. "
-            f"Current status for {run_id}: {current_status or 'UNKNOWN'}. "
+            f"Current status for {run_id}: "
+            f"{current_status or 'UNKNOWN'}. "
             "Verify delivery before attempting recovery."
         )
 
-    tracker.update_status(
-        run_id,
-        "APPROVED",
-    )
+    tracker.update_status(run_id, "APPROVED")
 
     processor = ApprovalProcessor(
-        tracker=tracker
+        tracker=tracker,
+        user_id=AUTH_USER_ID,
     )
 
-    return processor.process(
-        run_id
-    )
+    return processor.process(run_id)
 
 
 def mark_outreach_job_contacted(
     run_id: str,
     result: dict[str, Any],
+    user_id: str,
 ) -> bool:
     """Mark a job contacted only when sending is confirmed and linked."""
 
@@ -1136,7 +1152,7 @@ def mark_outreach_job_contacted(
     if not result.get("gmail_message_id"):
         return False
 
-    tracker = OutreachTracker()
+    tracker = OutreachTracker(user_id=user_id)
     outreach = tracker.get_outreach(run_id)
 
     if not outreach:
@@ -1147,11 +1163,13 @@ def mark_outreach_job_contacted(
     except (TypeError, ValueError):
         return False
 
-    store = JobStore()
+    from app.storage.user_job_status_store import UserJobStatusStore
+
+    status_store = UserJobStatusStore(user_id)
     try:
-        return store.mark_contacted(job_id)
+        return status_store.mark_contacted(job_id)
     finally:
-        store.database.connection.close()
+        status_store.close()
 
 # ============================================================
 # ============================================================
@@ -1182,16 +1200,67 @@ def _jp_snapshot():
     try:
         c=db.connection; jc={r[1] for r in c.execute('PRAGMA table_info(jobs)')}; cc={r[1] for r in c.execute('PRAGMA table_info(contacts)')}
         jobs=c.execute('SELECT COUNT(*) FROM jobs').fetchone()[0] if jc else 0
-        pending=c.execute("SELECT COUNT(*) FROM jobs WHERE COALESCE(review_status,'PENDING')='PENDING'").fetchone()[0] if 'review_status' in jc else jobs
-        contacts=c.execute('SELECT COUNT(*) FROM contacts').fetchone()[0] if cc else 0
-        companies=c.execute("SELECT COUNT(DISTINCT company) FROM contacts WHERE company IS NOT NULL AND TRIM(company)<>''").fetchone()[0] if 'company' in cc else 0
+        job_ids = [
+            row[0] for row in c.execute("SELECT id FROM jobs").fetchall()
+        ] if jc else []
+        from app.storage.user_job_status_store import UserJobStatusStore
+        status_store = UserJobStatusStore(AUTH_USER_ID)
+        try:
+            personal_statuses = status_store.get_all_statuses()
+        finally:
+            status_store.close()
+        pending = sum(
+            1 for job_id in job_ids
+            if (
+                personal_statuses.get(int(job_id), {}).get(
+                    "review_status", "PENDING"
+                )
+            ).upper() == "PENDING"
+        )
+        # Contact metrics must come from the signed-in user's database,
+        # never from the shared legacy contacts table.
+        import sqlite3
+        from app.services.user_context import get_user_profile_directory
+
+        user_contacts_db = (
+            get_user_profile_directory(AUTH_USER_ID) / "contacts.db"
+        )
+        contacts = 0
+        companies = 0
+
+        if user_contacts_db.exists():
+            user_db = sqlite3.connect(str(user_contacts_db))
+            try:
+                user_tables = {
+                    row[0]
+                    for row in user_db.execute(
+                        "SELECT name FROM sqlite_master WHERE type='table'"
+                    ).fetchall()
+                }
+                if "contacts" in user_tables:
+                    user_columns = {
+                        row[1]
+                        for row in user_db.execute(
+                            "PRAGMA table_info(contacts)"
+                        ).fetchall()
+                    }
+                    contacts = user_db.execute(
+                        "SELECT COUNT(*) FROM contacts"
+                    ).fetchone()[0]
+                    if "company" in user_columns:
+                        companies = user_db.execute(
+                            "SELECT COUNT(DISTINCT company) FROM contacts "
+                            "WHERE company IS NOT NULL AND TRIM(company)<>''"
+                        ).fetchone()[0]
+            finally:
+                user_db.close()
         sources=c.execute("SELECT COALESCE(source,'Unknown'),COUNT(*) FROM jobs GROUP BY source ORDER BY COUNT(*) DESC").fetchall() if 'source' in jc else []
         days=c.execute("SELECT substr(discovered_at,1,10),COUNT(*) FROM jobs WHERE discovered_at IS NOT NULL AND substr(discovered_at,1,10)>=date('now','-13 days') GROUP BY substr(discovered_at,1,10) ORDER BY 1").fetchall() if 'discovered_at' in jc else []
         return {'jobs':jobs,'pending':pending,'contacts':contacts,'companies':companies,'sources':sources,'days':days}
     finally: db.connection.close()
 
 def _jp_outreach():
-    path=OutreachTracker().output_path
+    path=OutreachTracker(user_id=AUTH_USER_ID).output_path
     if not path.exists(): return []
     try:
         wb=load_workbook(path,read_only=True,data_only=True); rows=list(wb.active.iter_rows(values_only=True)); wb.close()
@@ -1249,11 +1318,13 @@ def _jp_job_card(job, idx, with_contacts=True):
                 if jid is None:
                     st.error("Database ID missing; cannot save application status.")
                 else:
-                    store = JobStore()
+                    from app.storage.user_job_status_store import UserJobStatusStore
+
+                    status_store = UserJobStatusStore(AUTH_USER_ID)
                     try:
-                        ok = store.apply_job(int(jid))
+                        ok = status_store.mark_applied(int(jid))
                     finally:
-                        store.database.connection.close()
+                        status_store.close()
 
                     if ok:
                         for item in st.session_state.get("recent_jobs", []):
@@ -1267,11 +1338,20 @@ def _jp_job_card(job, idx, with_contacts=True):
                 jid=job.get('id')
                 if jid is None:st.error('Database ID missing; cannot dismiss this job.')
                 else:
-                    store=JobStore()
-                    try:ok=store.dismiss_job(int(jid))
-                    finally:store.database.connection.close()
-                    if ok:st.session_state.recent_jobs=[x for x in st.session_state.get('recent_jobs',[]) if get_job_key(x)!=key];st.rerun()
-                    else:st.error('Could not dismiss this job.')
+                    from app.storage.user_job_status_store import UserJobStatusStore
+                    status_store = UserJobStatusStore(AUTH_USER_ID)
+                    try:
+                        ok = status_store.dismiss_job(int(jid))
+                    finally:
+                        status_store.close()
+                    if ok:
+                        st.session_state.recent_jobs = [
+                            x for x in st.session_state.get("recent_jobs", [])
+                            if get_job_key(x) != key
+                        ]
+                        st.rerun()
+                    else:
+                        st.error("Could not dismiss this job.")
         if with_contacts:
             if st.button('Find contacts', key=f'jp_find_{key}'):
                 try:
@@ -1300,7 +1380,7 @@ def _jp_job_card(job, idx, with_contacts=True):
                     ck=f"{key}::{contact.get('email','')}"
                     if st.button('Generate draft',key=f'jp_draft_{ck}'):
                         try:
-                            draft=generate_draft(job,contact); rec=OutreachTracker().record(message=draft,job=job,contact=contact)
+                            draft=generate_draft(job,contact); rec=OutreachTracker(user_id=AUTH_USER_ID).record(message=draft,job=job,contact=contact)
                             st.session_state.drafts[ck]={'draft':draft,'run_id':rec['run_id']};st.success(f"Draft created: {rec['run_id']}")
                         except Exception as exc:st.error(f'Draft generation failed: {exc}')
                     dd=st.session_state.drafts.get(ck)
@@ -1313,7 +1393,7 @@ def _jp_job_card(job, idx, with_contacts=True):
                                 try:
                                     result = approve_and_send(rid)
                                     if result.get("status") == "SENT":
-                                        if mark_outreach_job_contacted(rid, result):
+                                        if mark_outreach_job_contacted(rid, result, AUTH_USER_ID):
                                             st.success("Email sent successfully. Job marked CONTACTED.")
                                         else:
                                             st.warning(
@@ -1330,7 +1410,16 @@ with st.sidebar:
     st.markdown('<div class="jp-brand">🎯 JobPilot</div>',unsafe_allow_html=True)
     st.markdown('<div class="jp-tagline">Find. Connect. Outreach. Grow.</div>',unsafe_allow_html=True)
     page=st.radio('NAVIGATION',['Dashboard','Job Discovery','Contacts','Outreach','Follow-ups','Candidate Profile'],label_visibility='collapsed',key='jp_navigation')
-    st.divider();cv=PROJECT_ROOT/'data'/'candidate'/'cv'/'current_cv.pdf';st.markdown('**Current CV**');st.caption(cv.name if cv.exists() else 'No current CV file found')
+    st.divider()
+    from app.services.user_context import get_user_profile_directory
+    cv_dir = get_user_profile_directory(AUTH_USER_ID)
+    cv_files = sorted(
+        cv_dir.glob("current_cv.*"),
+        key=lambda item: item.stat().st_mtime,
+        reverse=True,
+    )
+    st.markdown("**Current CV**")
+    st.caption(cv_files[0].name if cv_files else "No current CV file found")
 
 if not st.session_state.get("recent_jobs"):
     try:
@@ -1410,6 +1499,7 @@ elif page=='Job Discovery':
     finally:
         db.connection.close()
 
+    jobs = apply_user_job_statuses(jobs)
     jobs = [
         job for job in jobs
         if str(job.get("review_status") or "PENDING").upper()
@@ -1564,7 +1654,7 @@ elif page=='Outreach':
                         result = approve_and_send(selected)
 
                         if result.get("status") == "SENT":
-                            if mark_outreach_job_contacted(selected, result):
+                            if mark_outreach_job_contacted(selected, result, AUTH_USER_ID):
                                 st.success("Email sent successfully. Job marked CONTACTED.")
                             else:
                                 st.warning(
@@ -1585,8 +1675,16 @@ elif page=='Candidate Profile':
     if uploaded is not None and st.button('Analyze CV',type='primary',key='jp_analyze_cv'):
         temp=None
         try:
-            with tempfile.NamedTemporaryFile(delete=False,suffix=Path(uploaded.name).suffix.lower()) as f:f.write(uploaded.getbuffer());temp=Path(f.name)
-            with st.spinner('Analyzing CV...'):profile=CVIngestionService().ingest(temp)
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=Path(uploaded.name).suffix.lower(),
+            ) as f:
+                f.write(uploaded.getbuffer())
+                temp = Path(f.name)
+            with st.spinner("Analyzing CV..."):
+                profile = CVIngestionService(
+                    user_id=AUTH_USER_ID
+                ).ingest(temp)
             st.success('CV analyzed successfully.')
             st.session_state['jp_cv_analysis_message'] = 'CV analyzed successfully.'
         except Exception as exc:st.error(f'CV analysis failed: {exc}')
