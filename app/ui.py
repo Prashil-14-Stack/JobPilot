@@ -655,7 +655,7 @@ def run_live_job_search() -> dict[str, Any]:
 
     strategy.run()
 
-    executor = SearchExecutor()
+    executor = SearchExecutor(user_id=AUTH_USER_ID)
 
     # Start with a controlled batch of high-priority searches.
     jobs = executor.run(

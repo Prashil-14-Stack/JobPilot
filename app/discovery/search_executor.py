@@ -24,6 +24,7 @@ from app.discovery.linkedin_search import LinkedInSearch
 from app.discovery.indeed_search import IndeedSearch
 from app.discovery.browser_job_page import BrowserJobPageExtractor
 from bs4 import BeautifulSoup
+from app.services.user_context import get_user_profile_directory
 # ============================================================
 # PATHS
 # ============================================================
@@ -147,7 +148,12 @@ class SearchResult(BaseModel):
 
 class SearchExecutor:
 
-    def __init__(self):
+    def __init__(self, user_id: str | None = None):
+        self.search_plan_path = (
+            get_user_profile_directory(user_id) / "search_plan.json"
+            if user_id
+            else SEARCH_PLAN_PATH
+        )
 
         self.session = requests.Session()
 
@@ -237,10 +243,7 @@ class SearchExecutor:
     # ========================================================
 
     def load_search_plan(self) -> dict:
-
-        return self.load_json(
-            SEARCH_PLAN_PATH
-        )
+        return self.load_json(self.search_plan_path)
 
     # ========================================================
     # CAPABILITY LOOKUP
