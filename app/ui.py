@@ -11,6 +11,7 @@ import streamlit as st
 # ============================================================
 # PROJECT PATH
 # ============================================================
+st.caption("DEPLOY TEST: 59635c6")
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
