@@ -479,6 +479,8 @@ if "send_results" not in st.session_state:
 if "search_report" not in st.session_state:
     st.session_state.search_report = {}
 
+if "jp_search_stage" not in st.session_state:
+    st.session_state.jp_search_stage = "Not started"
 
 # ============================================================
 # HELPERS
@@ -651,10 +653,12 @@ def is_excluded_job_location(job: dict[str, Any]) -> bool:
 
 def run_live_job_search() -> dict[str, Any]:
 
+    st.session_state.jp_search_stage = "Generating user-specific search plan"
     strategy = SearchStrategy(user_id=AUTH_USER_ID)
 
     strategy.run()
 
+    st.session_state.jp_search_stage = "Executing high-priority searches"
     executor = SearchExecutor(user_id=AUTH_USER_ID)
 
     # Start with a controlled batch of high-priority searches.
@@ -662,7 +666,7 @@ def run_live_job_search() -> dict[str, Any]:
         limit=20,
         priority="HIGH",
     )
-
+    st.session_state.jp_search_stage = "Loading raw job results"
     # The execution metrics are persisted separately.
     report_path = (
         PROJECT_ROOT
@@ -719,7 +723,7 @@ def run_live_job_search() -> dict[str, Any]:
     # --------------------------------------------------------
     # Source deduplication
     # --------------------------------------------------------
-
+    st.session_state.jp_search_stage = "Deduplicating job results"
     deduplicator = SourceDeduplicator()
 
     unique_jobs, dedup_report = (
@@ -765,7 +769,7 @@ def run_live_job_search() -> dict[str, Any]:
         job for job in unique_jobs
         if not is_excluded_job_location(job)
     ]
-
+    st.session_state.jp_search_stage = "Normalizing and filtering jobs"
     normalized_jobs = normalize_jobs(eligible_jobs)
 
     save_jobs(
@@ -776,7 +780,7 @@ def run_live_job_search() -> dict[str, Any]:
     # --------------------------------------------------------
     # SQLite
     # --------------------------------------------------------
-
+    st.session_state.jp_search_stage = "Ingesting jobs into database"
     job_store = JobStore()
 
     ingest_result = job_store.ingest()
@@ -784,7 +788,7 @@ def run_live_job_search() -> dict[str, Any]:
     # --------------------------------------------------------
     # Recency
     # --------------------------------------------------------
-
+    st.session_state.jp_search_stage = "Filtering recent jobs"
     recent_jobs = get_recent_jobs(
         days=7
     )
@@ -792,7 +796,7 @@ def run_live_job_search() -> dict[str, Any]:
     # --------------------------------------------------------
     # Deterministic scoring
     # --------------------------------------------------------
-
+    st.session_state.jp_search_stage = "Scoring recent jobs"
     scored_jobs = []
 
     for job in recent_jobs:
@@ -858,7 +862,7 @@ def run_live_job_search() -> dict[str, Any]:
     # --------------------------------------------------------
     # Build UI report
     # --------------------------------------------------------
-
+    st.session_state.jp_search_stage = "Building search report"
     tasks_executed = (
         execution_report.get(
             "tasks_selected",
@@ -1474,6 +1478,7 @@ if page=='Dashboard':
         else:st.info('Run a live search to populate this area with current opportunities.')
 elif page=='Job Discovery':
     st.caption("DEBUG VERSION: JP-20261024-A")
+    st.info(f"Search diagnostic: {st.session_state.jp_search_stage}")
     st.markdown('<div class="jp-welcome">Live Job Discovery</div>',unsafe_allow_html=True);st.caption('Review opportunities, inspect match scores, and find relevant contacts.')
     a,b=st.columns([4,1.4])
     with a:q=st.text_input('Search by job title, company or keywords',placeholder='Business Analyst, transformation, insurance')
@@ -1495,6 +1500,9 @@ elif page=='Job Discovery':
                 )
 
             except Exception as exc:
+                st.session_state["jp_search_stage"] = (
+                    f"FAILED during: {st.session_state.get('jp_search_stage', 'Unknown stage')}"
+                )
                 st.session_state["jp_search_debug"] = (
                     f"Search failed: {type(exc).__name__}: {exc}"
                 )
