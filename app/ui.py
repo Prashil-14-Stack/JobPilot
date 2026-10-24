@@ -450,6 +450,32 @@ if str(AUTH_USER_ID).strip().lower() not in allowed_emails:
     st.error("Access denied. This JobPilot deployment is private.")
     st.stop()
 
+# ============================================================
+# GMAIL WEB OAUTH CALLBACK
+# ============================================================
+from app.networking.gmail_oauth import (
+    begin_gmail_authorization,
+    finish_gmail_authorization,
+    gmail_token_path,
+)
+
+gmail_callback = st.query_params.get("gmail_oauth_callback")
+
+if gmail_callback == "1":
+    try:
+        finish_gmail_authorization(
+            AUTH_USER_ID,
+            st.query_params,
+        )
+        # Remove OAuth parameters from the URL after processing.
+        st.query_params.clear()
+        st.session_state["gmail_oauth_connected_notice"] = True
+        st.rerun()
+    except Exception as exc:
+        st.query_params.clear()
+        st.error(f"Gmail connection failed: {exc}")
+if st.session_state.pop("gmail_oauth_connected_notice", False):
+    st.success("Gmail connected successfully.")
 # -----------------------------
 # LOGOUT
 # -----------------------------
@@ -1407,6 +1433,24 @@ def _jp_job_card(job, idx, with_contacts=True):
 with st.sidebar:
     st.markdown('<div class="jp-brand">🎯 JobPilot</div>',unsafe_allow_html=True)
     st.markdown('<div class="jp-tagline">Find. Connect. Outreach. Grow.</div>',unsafe_allow_html=True)
+
+    gmail_token = gmail_token_path(AUTH_USER_ID)
+
+    if gmail_token.exists():
+        st.sidebar.success("Gmail token found")
+    else:
+        try:
+            gmail_authorization_url = begin_gmail_authorization(
+                AUTH_USER_ID
+            )
+            st.sidebar.link_button(
+                "Connect Gmail",
+                gmail_authorization_url,
+                use_container_width=True,
+            )
+        except Exception as exc:
+            st.sidebar.error(f"Gmail setup error: {exc}")
+
     page=st.radio('NAVIGATION',['Dashboard','Job Discovery','Contacts','Outreach','Follow-ups','Candidate Profile'],label_visibility='collapsed',key='jp_navigation')
     st.divider()
     from app.services.user_context import get_user_profile_directory

@@ -5,24 +5,8 @@ from pathlib import Path
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+
 from googleapiclient.discovery import build
-
-
-# ============================================================
-# PATHS
-# ============================================================
-
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-
-CREDENTIALS_PATH = (
-    PROJECT_ROOT / "credentials.json"
-)
-
-TOKEN_PATH = (
-    PROJECT_ROOT / "token.json"
-)
-
 
 # ============================================================
 # GMAIL PERMISSION
@@ -33,6 +17,7 @@ SCOPES = [
 ]
 
 
+
 class GmailSender:
 
     def __init__(self, user_id: str | None = None):
@@ -41,16 +26,11 @@ class GmailSender:
                 "A verified authenticated user_id is required for Gmail access."
             )
 
-        import hashlib
+        self.user_id = user_id.strip().lower()
 
-        user_key = hashlib.sha256(
-            user_id.strip().lower().encode("utf-8")
-        ).hexdigest()
+        from app.networking.gmail_oauth import gmail_token_path
 
-        from app.services.user_context import get_user_profile_directory
-
-        user_directory = get_user_profile_directory(user_id)
-        self.token_path = user_directory / "gmail_token.json"
+        self.token_path = gmail_token_path(self.user_id)
         self.service = self._authenticate()
 
     # ========================================================
@@ -58,66 +38,46 @@ class GmailSender:
     # ========================================================
 
     def _authenticate(self):
-
-        credentials = None
-
-        if self.token_path.exists():
-
-            credentials = Credentials.from_authorized_user_file(
-                self.token_path,
-                SCOPES
+        if not self.token_path.exists():
+            raise FileNotFoundError(
+                "Gmail is not connected for this account. "
+                "Use Connect Gmail in the JobPilot sidebar first."
             )
 
-        if credentials and credentials.expired:
+        credentials = Credentials.from_authorized_user_file(
+            str(self.token_path),
+            SCOPES,
+        )
 
-            if credentials.refresh_token:
+        if not credentials.valid:
+            if credentials.expired and credentials.refresh_token:
                 try:
                     credentials.refresh(Request())
                 except Exception as exc:
-                    # Reauthorize only when Google's token refresh is rejected.
                     from google.auth.exceptions import RefreshError
 
-                    if not isinstance(exc, RefreshError):
-                        raise
+                    if isinstance(exc, RefreshError):
+                        raise PermissionError(
+                            "Gmail authorization has expired or been revoked. "
+                            "Reconnect Gmail from the JobPilot sidebar."
+                        ) from exc
+                    raise
 
-                    print(
-                        "Google OAuth refresh failed; "
-                        "starting browser reauthorization."
-                    )
-                    credentials = None
+                # Persist refreshed credentials for this user.
+                self.token_path.write_text(
+                    credentials.to_json(),
+                    encoding="utf-8",
+                )
             else:
-                credentials = None
-
-        if not credentials:
-
-            if not CREDENTIALS_PATH.exists():
-
-                raise FileNotFoundError(
-                    f"Google OAuth credentials not found: "
-                    f"{CREDENTIALS_PATH}"
+                raise PermissionError(
+                    "Gmail credentials are invalid or cannot be refreshed. "
+                    "Reconnect Gmail from the JobPilot sidebar."
                 )
-
-            flow = (
-                InstalledAppFlow
-                .from_client_secrets_file(
-                    CREDENTIALS_PATH,
-                    SCOPES
-                )
-            )
-
-            credentials = flow.run_local_server(
-                port=0
-            )
-
-            self.token_path.write_text(
-                credentials.to_json(),
-                encoding="utf-8"
-            )
 
         return build(
             "gmail",
             "v1",
-            credentials=credentials
+            credentials=credentials,
         )
 
     # ========================================================
