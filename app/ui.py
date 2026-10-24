@@ -1447,11 +1447,20 @@ if page=='Dashboard':
         l,r=st.columns([4,1.5],vertical_alignment='center')
         with l:st.markdown('## Live Job Discovery');st.caption('Search live sources, update SQLite, and score opportunities against your profile.')
         with r:
-            if st.button('🔍 Run Live Job Search',type='primary',use_container_width=True,key='jp_dash_search'):
+            if st.button(
+                '🔍 Run Live Job Search',
+                type='primary',
+                use_container_width=True,
+                key='jp_dash_search'
+            ):
+                st.info("Diagnostic: Dashboard search button was triggered.")
                 try:
-                    with st.spinner('Running live job discovery...'):st.session_state.search_report=run_live_job_search()
+                    with st.spinner('Searching live sources...'):
+                        st.session_state.search_report = run_live_job_search()
+                    st.success("Live job search completed.")
                     st.rerun()
-                except Exception as exc:st.error(f'Job search failed: {exc}')
+                except Exception as exc:
+                    st.exception(exc)
         current=st.session_state.get('recent_jobs',[])
         if current:
             st.caption(f'{len(current)} eligible Business Analyst jobs in current search results')
@@ -1468,11 +1477,16 @@ elif page=='Job Discovery':
     a,b=st.columns([4,1.4])
     with a:q=st.text_input('Search by job title, company or keywords',placeholder='Business Analyst, transformation, insurance')
     with b:
-        if st.button('Run Live Job Search',type='primary',use_container_width=True,key='jp_jobs_search'):
+        if st.button('🔍 Run Live Job Search', type='primary',
+                    use_container_width=True, key='jp_jobs_search'):
+            st.info("Diagnostic: Job Discovery search button was triggered.")
             try:
-                with st.spinner('Searching live sources...'):run_live_job_search()
+                with st.spinner('Running live job discovery...'):
+                    st.session_state.search_report = run_live_job_search()
+                st.success("Live job search completed.")
                 st.rerun()
-            except Exception as exc:st.error(f'Job search failed: {exc}')
+            except Exception as exc:
+                st.exception(exc)
 
     # Load the complete stored job catalogue.
     db = JobDatabase()
