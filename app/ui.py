@@ -1473,6 +1473,7 @@ if page=='Dashboard':
         )
         else:st.info('Run a live search to populate this area with current opportunities.')
 elif page=='Job Discovery':
+    st.caption("DEBUG VERSION: JP-20261024-A")
     st.markdown('<div class="jp-welcome">Live Job Discovery</div>',unsafe_allow_html=True);st.caption('Review opportunities, inspect match scores, and find relevant contacts.')
     a,b=st.columns([4,1.4])
     with a:q=st.text_input('Search by job title, company or keywords',placeholder='Business Analyst, transformation, insurance')
