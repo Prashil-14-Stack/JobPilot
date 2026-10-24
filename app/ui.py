@@ -1478,16 +1478,29 @@ elif page=='Job Discovery':
     a,b=st.columns([4,1.4])
     with a:q=st.text_input('Search by job title, company or keywords',placeholder='Business Analyst, transformation, insurance')
     with b:
-        if st.button('🔍 Run Live Job Search', type='primary',
-                    use_container_width=True, key='jp_jobs_search'):
-            st.info("Diagnostic: Job Discovery search button was triggered.")
+        if st.button(
+            '🔍 Run Live Job Search',
+            type='primary',
+            use_container_width=True,
+            key='jp_jobs_search'
+        ):
+            st.session_state["jp_search_debug"] = "Search button clicked."
             try:
                 with st.spinner('Running live job discovery...'):
-                    st.session_state.search_report = run_live_job_search()
-                st.success("Live job search completed.")
-                st.rerun()
+                    report = run_live_job_search()
+                    st.session_state.search_report = report
+
+                st.session_state["jp_search_debug"] = (
+                    f"Search completed. Result type: {type(report).__name__}"
+                )
+
             except Exception as exc:
-                st.exception(exc)
+                st.session_state["jp_search_debug"] = (
+                    f"Search failed: {type(exc).__name__}: {exc}"
+                )
+
+        if st.session_state.get("jp_search_debug"):
+            st.info(st.session_state["jp_search_debug"])
 
     # Load the complete stored job catalogue.
     db = JobDatabase()
