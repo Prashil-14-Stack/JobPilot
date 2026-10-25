@@ -38,7 +38,9 @@ class GmailOAuthTests(unittest.TestCase):
 
     def test_rejects_different_signed_in_user(self):
         state = gmail_oauth._create_signed_state(
-            "alice@example.com", now=1000
+            "alice@example.com",
+            code_verifier="test-code-verifier",
+            now=1000,
         )
 
         with self.assertRaisesRegex(PermissionError, "different signed-in user"):
@@ -48,7 +50,9 @@ class GmailOAuthTests(unittest.TestCase):
 
     def test_rejects_expired_state(self):
         state = gmail_oauth._create_signed_state(
-            "alice@example.com", now=1000
+            "alice@example.com",
+            code_verifier="test-code-verifier",
+            now=1000,
         )
 
         with self.assertRaisesRegex(PermissionError, "invalid, expired"):
@@ -60,7 +64,9 @@ class GmailOAuthTests(unittest.TestCase):
 
     def test_saves_token_to_authenticated_users_profile(self):
         state = gmail_oauth._create_signed_state(
-            "alice@example.com", now=1000
+            "alice@example.com",
+            code_verifier="test-code-verifier",
+            now=1000,
         )
 
         credentials = MagicMock()
@@ -69,9 +75,9 @@ class GmailOAuthTests(unittest.TestCase):
 
         flow = MagicMock()
         flow.credentials = credentials
-        st.session_state[gmail_oauth.VERIFIER_KEY] = "test-code-verifier"
+
         with (
-            patch.object(gmail_oauth, "_new_flow", return_value=flow),
+            patch.object(gmail_oauth, "_new_flow", return_value=flow) as mock_new_flow,
             patch.object(gmail_oauth, "gmail_token_path") as mock_token_path,
             patch.object(gmail_oauth.time, "time", return_value=1001),
         ):
@@ -83,7 +89,11 @@ class GmailOAuthTests(unittest.TestCase):
                     "alice@example.com",
                     {"state": state, "code": "test-code"},
                 )
-
+                mock_new_flow.assert_called_once_with(
+                    state=state,
+                    code_verifier="test-code-verifier",
+                )
+                self.assertEqual(mock_token_path.call_count, 1)
                 self.assertTrue(token_path.exists())
                 self.assertEqual(
                     token_path.read_text(encoding="utf-8"),

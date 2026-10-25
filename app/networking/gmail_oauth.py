@@ -3,17 +3,15 @@ from __future__ import annotations
 
 import base64
 import hashlib
-import hmac
 import json
 import secrets
 import time
 from collections.abc import Mapping
 from typing import Any
-from urllib.parse import urlencode
 
 import streamlit as st
 from google_auth_oauthlib.flow import Flow
-
+from cryptography.fernet import Fernet, InvalidToken
 from app.services.user_context import get_user_profile_directory
 
 SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
@@ -88,28 +86,45 @@ def _b64decode(value: str) -> bytes:
     return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
 
 
-def _create_signed_state(user_id: str, now: int | None = None) -> str:
+def _state_cipher() -> Fernet:
     config = _oauth_config()
+
+    # Derive a Fernet-compatible key from the existing state secret.
+    key = base64.urlsafe_b64encode(
+        hashlib.sha256(
+            config["state_secret"].encode("utf-8")
+        ).digest()
+    )
+    return Fernet(key)
+
+
+def _create_signed_state(
+    user_id: str,
+    code_verifier: str,
+    now: int | None = None,
+) -> str:
     normalized_user = user_id.strip().lower()
 
     if not normalized_user or "@" not in normalized_user:
         raise ValueError("A valid authenticated user identity is required.")
 
+    if not code_verifier:
+        raise ValueError("A PKCE code verifier is required.")
+
     payload = {
         "sub": normalized_user,
         "nonce": secrets.token_urlsafe(24),
         "iat": int(time.time() if now is None else now),
+        "code_verifier": code_verifier,
     }
-    encoded_payload = _b64encode(
-        json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
-    )
-    signature = hmac.new(
-        config["state_secret"].encode(),
-        encoded_payload.encode("ascii"),
-        hashlib.sha256,
-    ).digest()
 
-    return f"{encoded_payload}.{_b64encode(signature)}"
+    plaintext = json.dumps(
+        payload,
+        separators=(",", ":"),
+        sort_keys=True,
+    ).encode("utf-8")
+
+    return _state_cipher().encrypt(plaintext).decode("ascii")
 
 
 def _verify_signed_state(
@@ -117,60 +132,57 @@ def _verify_signed_state(
     user_id: str,
     now: int | None = None,
 ) -> dict[str, Any]:
-    config = _oauth_config()
     try:
-        encoded_payload, encoded_signature = state.split(".", 1)
-        supplied_signature = _b64decode(encoded_signature)
-        expected_signature = hmac.new(
-            config["state_secret"].encode(),
-            encoded_payload.encode("ascii"),
-            hashlib.sha256,
-        ).digest()
+        plaintext = _state_cipher().decrypt(
+            state.encode("ascii"),
+        )
+        payload = json.loads(plaintext)
 
-        if not hmac.compare_digest(supplied_signature, expected_signature):
-            raise ValueError
-
-        payload = json.loads(_b64decode(encoded_payload))
         current_time = int(time.time() if now is None else now)
         issued_at = int(payload["iat"])
         subject = str(payload["sub"]).strip().lower()
         nonce = str(payload["nonce"])
+        code_verifier = str(payload["code_verifier"])
 
         if current_time < issued_at:
-            raise ValueError
+            raise ValueError("State issued in the future.")
+
         if current_time - issued_at > STATE_TTL_SECONDS:
-            raise ValueError
+            raise ValueError("State expired.")
+
         if subject != user_id.strip().lower():
-            raise ValueError
-        if not nonce:
-            raise ValueError
+            raise ValueError("State user mismatch.")
+
+        if not nonce or not code_verifier:
+            raise ValueError("State payload incomplete.")
 
         return payload
-    except (ValueError, TypeError, KeyError, json.JSONDecodeError) as exc:
-        raise PermissionError(
-            "Gmail authorization state is invalid, expired, or belongs to "
-            "a different signed-in user. Start Connect Gmail again."
-        ) from exc
 
+    except (
+        InvalidToken,
+        ValueError,
+        TypeError,
+        KeyError,
+        UnicodeError,
+        json.JSONDecodeError,
+    ) as exc:
+        raise PermissionError(
+            "Gmail authorization state is invalid, expired, or belongs "
+            "to a different signed-in user. Start Connect Gmail again."
+        ) from exc
 
 def begin_gmail_authorization(user_id: str) -> str:
     normalized_user = user_id.strip().lower()
 
-    existing_user = st.session_state.get(USER_KEY)
-    existing_state = st.session_state.get(STATE_KEY)
-    existing_url = st.session_state.get(URL_KEY)
+    code_verifier = secrets.token_urlsafe(64)
+    state = _create_signed_state(
+        normalized_user,
+        code_verifier=code_verifier,
+    )
 
-    if (
-        existing_user == normalized_user
-        and existing_state
-        and existing_url
-    ):
-        return existing_url
-
-    state = _create_signed_state(normalized_user)
     flow = _new_flow(
         state=state,
-        autogenerate_code_verifier=True,
+        code_verifier=code_verifier,
     )
 
     authorization_url, _ = flow.authorization_url(
@@ -179,16 +191,7 @@ def begin_gmail_authorization(user_id: str) -> str:
         prompt="consent",
     )
 
-    if not flow.code_verifier:
-        raise RuntimeError("Google OAuth did not generate a PKCE verifier.")
-
-    st.session_state[VERIFIER_KEY] = flow.code_verifier
-
-    st.session_state[STATE_KEY] = state
-    st.session_state[USER_KEY] = normalized_user
-    st.session_state[URL_KEY] = authorization_url
     return authorization_url
-
 
 def finish_gmail_authorization(
     user_id: str,
@@ -201,7 +204,7 @@ def finish_gmail_authorization(
         raise PermissionError("Google did not return OAuth state.")
 
     state = str(returned_state)
-    _verify_signed_state(state, user_id)
+    state_payload = _verify_signed_state(state, user_id)
 
     error = query_params.get("error")
     if isinstance(error, list):
@@ -216,17 +219,8 @@ def finish_gmail_authorization(
         code = code[0] if code else None
     if not code:
         raise RuntimeError("Google did not return an authorization code.")
-    code_verifier = st.session_state.get(VERIFIER_KEY)
+    code_verifier = state_payload["code_verifier"]
 
-    if not code_verifier:
-        raise RuntimeError(
-            "PKCE_DIAGNOSTIC: verifier_missing; "
-            f"session_has_state={bool(st.session_state.get(STATE_KEY))}; "
-            f"session_user_matches="
-            f"{st.session_state.get(USER_KEY) == user_id.strip().lower()}; "
-            f"callback_state_matches="
-            f"{st.session_state.get(STATE_KEY) == state}"
-        )
     flow = _new_flow(
         state=state,
         code_verifier=code_verifier,
