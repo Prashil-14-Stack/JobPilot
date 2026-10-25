@@ -6,7 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any
-
+from datetime import datetime
 # ============================================================
 # PROJECT PATH
 # ============================================================
@@ -1367,40 +1367,170 @@ st.markdown("<style>"
 "</style>",unsafe_allow_html=True)
 
 def _jp_snapshot():
-    db=JobDatabase()
+    """Return dashboard metrics scoped to the authenticated user's profile."""
+    import sqlite3
+
+    from app.services.user_context import get_user_profile_directory
+    from app.storage.user_job_status_store import UserJobStatusStore
+
+    db = JobDatabase()
+
     try:
-        c=db.connection; jc={r[1] for r in c.execute('PRAGMA table_info(jobs)').fetchall()}; cc={r[1] for r in c.execute('PRAGMA table_info(contacts)').fetchall()}
-        jobs=c.execute('SELECT COUNT(*) FROM jobs').fetchone()[0] if jc else 0
-        job_ids = [
-            row[0] for row in c.execute("SELECT id FROM jobs").fetchall()
-        ] if jc else []
-        from app.storage.user_job_status_store import UserJobStatusStore
+        c = db.connection
+
+        # Load the complete shared job catalogue.
+        job_columns = {
+            row[1]
+            for row in c.execute("PRAGMA table_info(jobs)").fetchall()
+        }
+
+        if not job_columns:
+            all_jobs = []
+        else:
+            all_jobs = [
+                dict(row)
+                for row in c.execute(
+                    "SELECT * FROM jobs ORDER BY id"
+                ).fetchall()
+            ]
+
+        # Identify the authenticated user's profile.
+        profile_key = get_profile_key(AUTH_USER_ID)
+
+        search_mode = (
+            BA_ONLY
+            if profile_key == BA_PROFILE
+            else PROFILE_MATCHED
+        )
+
+        # Load the same role universe used by Job Discovery.
+        role_universe = None
+
+        if search_mode == PROFILE_MATCHED:
+            role_universe_path = (
+                PROJECT_ROOT / "data" / "role_universes"
+                / "wife_role_universe.json"
+                if profile_key == WIFE_PROFILE
+                else PROJECT_ROOT / "data" / "role_universe.json"
+            )
+
+            if role_universe_path.exists():
+                try:
+                    with role_universe_path.open(
+                        "r", encoding="utf-8"
+                    ) as file:
+                        role_universe = json.load(file)
+                except (OSError, json.JSONDecodeError):
+                    role_universe = {"roles": []}
+            else:
+                role_universe = {"roles": []}
+
+        # Apply the same profile eligibility rules as Job Discovery.
+        eligible_jobs = []
+
+        for job in all_jobs:
+            if is_excluded_job_location(job):
+                continue
+
+            if search_mode == PROFILE_MATCHED:
+                matches_profile = is_profile_matched_title(
+                    job.get("title"),
+                    role_universe,
+                )
+            else:
+                matches_profile = (
+                    is_ba_title(job.get("title"))
+                    or (
+                        (job.get("relevance_level") or "").upper()
+                        in {"CORE", "ADJACENT"}
+                    )
+                )
+
+            if matches_profile:
+                eligible_jobs.append(job)
+
+        # Apply the authenticated user's personal review statuses.
         status_store = UserJobStatusStore(AUTH_USER_ID)
+
         try:
             personal_statuses = status_store.get_all_statuses()
         finally:
             status_store.close()
-        pending = sum(
-            1 for job_id in job_ids
-            if (
-                personal_statuses.get(int(job_id), {}).get(
-                    "review_status", "PENDING"
-                )
-            ).upper() == "PENDING"
-        )
-        # Contact metrics must come from the signed-in user's database,
-        # never from the shared legacy contacts table.
-        import sqlite3
-        from app.services.user_context import get_user_profile_directory
 
+        jobs = 0
+        pending = 0
+        filtered_jobs = []
+
+        for job in eligible_jobs:
+            try:
+                job_id = int(job["id"])
+            except (KeyError, TypeError, ValueError):
+                continue
+
+            status = personal_statuses.get(job_id, {})
+            review_status = str(
+                status.get("review_status", "PENDING")
+            ).upper()
+
+            if review_status == "DISMISSED":
+                continue
+
+            jobs += 1
+            filtered_jobs.append(job)
+
+            if review_status == "PENDING":
+                pending += 1
+
+        # Calculate source counts from the eligible catalogue.
+        source_counts = {}
+
+        for job in filtered_jobs:
+            source = str(job.get("source") or "Unknown")
+            source_counts[source] = source_counts.get(source, 0) + 1
+
+        sources = sorted(
+            source_counts.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        )
+
+        # Calculate the discovery trend using eligible jobs only.
+        from collections import Counter
+
+        day_counts = Counter()
+
+        for job in filtered_jobs:
+            discovered_at = str(job.get("discovered_at") or "")
+
+            if len(discovered_at) >= 10:
+                day = discovered_at[:10]
+
+                # Keep the same 14-day window as the dashboard.
+                try:
+                    discovered_date = datetime.strptime(
+                        day, "%Y-%m-%d"
+                    ).date()
+
+                    today = datetime.now().date()
+
+                    if 0 <= (today - discovered_date).days <= 13:
+                        day_counts[day] += 1
+                except ValueError:
+                    continue
+
+        days = sorted(day_counts.items())
+
+        # Contacts are stored separately for each authenticated user.
         user_contacts_db = (
             get_user_profile_directory(AUTH_USER_ID) / "contacts.db"
         )
+
         contacts = 0
         companies = 0
 
         if user_contacts_db.exists():
             user_db = sqlite3.connect(str(user_contacts_db))
+
             try:
                 user_tables = {
                     row[0]
@@ -1408,6 +1538,7 @@ def _jp_snapshot():
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     ).fetchall()
                 }
+
                 if "contacts" in user_tables:
                     user_columns = {
                         row[1]
@@ -1415,20 +1546,34 @@ def _jp_snapshot():
                             "PRAGMA table_info(contacts)"
                         ).fetchall()
                     }
+
                     contacts = user_db.execute(
                         "SELECT COUNT(*) FROM contacts"
                     ).fetchone()[0]
+
                     if "company" in user_columns:
                         companies = user_db.execute(
-                            "SELECT COUNT(DISTINCT company) FROM contacts "
-                            "WHERE company IS NOT NULL AND TRIM(company)<>''"
+                            """
+                            SELECT COUNT(DISTINCT company)
+                            FROM contacts
+                            WHERE company IS NOT NULL
+                              AND TRIM(company) <> ''
+                            """
                         ).fetchone()[0]
             finally:
                 user_db.close()
-        sources=c.execute("SELECT COALESCE(source,'Unknown'),COUNT(*) FROM jobs GROUP BY source ORDER BY COUNT(*) DESC").fetchall() if 'source' in jc else []
-        days=c.execute("SELECT substr(discovered_at,1,10),COUNT(*) FROM jobs WHERE discovered_at IS NOT NULL AND substr(discovered_at,1,10)>=date('now','-13 days') GROUP BY substr(discovered_at,1,10) ORDER BY 1").fetchall() if 'discovered_at' in jc else []
-        return {'jobs':jobs,'pending':pending,'contacts':contacts,'companies':companies,'sources':sources,'days':days}
-    finally: db.connection.close()
+
+        return {
+            "jobs": jobs,
+            "pending": pending,
+            "contacts": contacts,
+            "companies": companies,
+            "sources": sources,
+            "days": days,
+        }
+
+    finally:
+        db.connection.close()
 
 def _jp_outreach():
     path=OutreachTracker(user_id=AUTH_USER_ID).output_path
