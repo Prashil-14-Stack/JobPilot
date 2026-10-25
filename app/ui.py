@@ -5,7 +5,7 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any
-
+from app.services.profile_config import BA_PROFILE, WIFE_PROFILE, get_profile_key
 import streamlit as st
 
 # ============================================================
@@ -20,6 +20,10 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from app.networking.playwright_setup import ensure_chromium_installed
 from app.services.cv_ingestion_service import CVIngestionService
+from app.services.user_search_preferences import (
+    BA_ONLY,
+    PROFILE_MATCHED,
+)
 
 
 # ============================================================
@@ -554,17 +558,30 @@ def render_profile_value(value, level=0):
 
 
 def load_candidate_profile() -> dict[str, Any]:
+    from app.services.profile_config import WIFE_PROFILE, get_profile_key
     from app.services.user_context import get_user_profile_directory
 
-    profile_dir = get_user_profile_directory(AUTH_USER_ID)
-    profile_path = profile_dir / "current_profile.json"
+    profile_key = get_profile_key(AUTH_USER_ID)
+
+    if profile_key == WIFE_PROFILE:
+        profile_path = (
+            PROJECT_ROOT
+            / "data"
+            / "candidate"
+            / "profiles"
+            / "wife_profile.json"
+        )
+    else:
+        profile_path = (
+            get_user_profile_directory(AUTH_USER_ID)
+            / "current_profile.json"
+        )
 
     if not profile_path.exists():
         return {}
 
     with profile_path.open("r", encoding="utf-8") as file:
         return json.load(file)
-
 
 def is_ba_title(title: str | None) -> bool:
 
@@ -583,6 +600,67 @@ def is_ba_title(title: str | None) -> bool:
         signal in value
         for signal in signals
     )
+
+
+def is_profile_matched_title(
+    title: str | None,
+    role_universe: dict[str, Any] | None = None,
+) -> bool:
+    """Match a job title against the current user's generated role universe."""
+    if not title:
+        return False
+
+    if role_universe is None:
+        role_universe_path = (
+            PROJECT_ROOT
+            / "data"
+            / "candidate"
+            / "profiles_by_user"
+        )
+        from app.services.user_context import get_user_profile_directory
+        role_universe_path = (
+            get_user_profile_directory(AUTH_USER_ID)
+            / "role_universe.json"
+        )
+
+        if not role_universe_path.exists():
+            return False
+
+        try:
+            with role_universe_path.open("r", encoding="utf-8") as file:
+                role_universe = json.load(file)
+        except (OSError, json.JSONDecodeError):
+            return False
+
+    title_normalized = re.sub(
+        r"[^a-z0-9]+",
+        " ",
+        title.lower(),
+    ).strip()
+
+    for role in role_universe.get("roles", []):
+        canonical_title = role.get("canonical_title") or role.get("title") or ""
+
+        variants = role.get("search_variants") or role.get("search_keywords") or []
+        if isinstance(variants, str):
+            variants = [variants]
+
+        candidates = [canonical_title, *variants]
+
+        for candidate in candidates:
+            candidate_normalized = re.sub(
+                r"[^a-z0-9]+",
+                " ",
+                str(candidate).lower(),
+            ).strip()
+
+            if candidate_normalized and re.search(
+                rf"(?<![a-z0-9]){re.escape(candidate_normalized)}(?![a-z0-9])",
+                title_normalized,
+            ):
+                return True
+
+    return False
 
 
 def get_job_key(job: dict[str, Any]) -> str:
@@ -680,8 +758,16 @@ def is_excluded_job_location(job: dict[str, Any]) -> bool:
 
 def run_live_job_search() -> dict[str, Any]:
 
+    from app.services.profile_config import BA_PROFILE, get_profile_key
+
+    profile_key = get_profile_key(AUTH_USER_ID)
+    search_mode = BA_ONLY if profile_key == BA_PROFILE else PROFILE_MATCHED
+
     st.session_state.jp_search_stage = "Generating user-specific search plan"
-    strategy = SearchStrategy(user_id=AUTH_USER_ID)
+    strategy = SearchStrategy(
+        user_id=AUTH_USER_ID,
+        search_mode=search_mode,
+    )
 
     strategy.run()
 
@@ -858,15 +944,36 @@ def run_live_job_search() -> dict[str, Any]:
     job_store.database.connection.commit()
 
     # --------------------------------------------------------
-    # Business Analyst hard inclusion
+    # Mode-aware role inclusion
     # --------------------------------------------------------
 
-    ba_jobs = [
-        job
-        for job in scored_jobs
-        if is_ba_title(job.get("title"))
-    ]
-    ba_jobs = apply_user_job_statuses(ba_jobs)
+    if search_mode == PROFILE_MATCHED:
+        role_universe_path = (
+            PROJECT_ROOT
+            / "data"
+            / "role_universes"
+            / "wife_role_universe.json"
+        )
+
+        with role_universe_path.open("r", encoding="utf-8") as file:
+            profile_role_universe = json.load(file)
+
+        eligible_jobs = [
+            job
+            for job in scored_jobs
+            if is_profile_matched_title(
+                job.get("title"),
+                profile_role_universe,
+            )
+        ]
+    else:
+        eligible_jobs = [
+            job
+            for job in scored_jobs
+            if is_ba_title(job.get("title"))
+        ]
+
+    ba_jobs = apply_user_job_statuses(eligible_jobs)
     ba_jobs = [
         job for job in ba_jobs
         if (job.get("review_status") or "PENDING").upper() != "DISMISSED"
@@ -989,32 +1096,70 @@ def apply_user_job_statuses(
 
 
 def restore_recent_jobs() -> list[dict[str, Any]]:
-    """Restore eligible Business Analyst jobs from SQLite."""
+    """Restore recent jobs using the authenticated user's search mode."""
+
+    profile_key = get_profile_key(AUTH_USER_ID)
+    search_mode = (
+        BA_ONLY
+        if profile_key == BA_PROFILE
+        else PROFILE_MATCHED
+    )
 
     recent_jobs = apply_user_job_statuses(get_recent_jobs(days=7))
 
-    ba_jobs = [
-        job
-        for job in recent_jobs
-        if (
-            is_ba_title(job.get("title"))
-            or (
-                job.get("relevance_level") or ""
-            ).upper() in {"CORE", "ADJACENT"}
+    if search_mode == PROFILE_MATCHED:
+        from app.services.user_context import get_user_profile_directory
+
+        role_universe_path = (
+            PROJECT_ROOT / "data" / "role_universes" / "wife_role_universe.json"
+            if profile_key == WIFE_PROFILE
+            else PROJECT_ROOT / "data" / "role_universe.json"
         )
-        and (
+
+        if role_universe_path.exists():
+            try:
+                with role_universe_path.open("r", encoding="utf-8") as file:
+                    profile_role_universe = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                profile_role_universe = {"roles": []}
+        else:
+            profile_role_universe = {"roles": []}
+
+        eligible_jobs = [
+            job
+            for job in recent_jobs
+            if is_profile_matched_title(
+                job.get("title"),
+                profile_role_universe,
+            )
+        ]
+    else:
+        eligible_jobs = [
+            job
+            for job in recent_jobs
+            if (
+                is_ba_title(job.get("title"))
+                or (
+                    job.get("relevance_level") or ""
+                ).upper() in {"CORE", "ADJACENT"}
+            )
+        ]
+
+    eligible_jobs = [
+        job
+        for job in eligible_jobs
+        if (
             job.get("review_status") or "PENDING"
         ).upper() != "DISMISSED"
         and not is_excluded_job_location(job)
     ]
 
-
-    ba_jobs.sort(
+    eligible_jobs.sort(
         key=lambda job: job.get("relevance_score") or 0,
         reverse=True,
     )
 
-    return ba_jobs
+    return eligible_jobs
 
 # ============================================================
 # CONTACT DISCOVERY
@@ -1512,7 +1657,20 @@ if page=='Dashboard':
                     st.exception(exc)
         current=st.session_state.get('recent_jobs',[])
         if current:
-            st.caption(f'{len(current)} eligible Business Analyst jobs in current search results')
+            dashboard_profile_key = get_profile_key(AUTH_USER_ID)
+            dashboard_mode = (
+                BA_ONLY
+                if dashboard_profile_key == BA_PROFILE
+                else PROFILE_MATCHED
+            )
+            result_label = (
+                "profile-matched jobs"
+                if dashboard_mode == PROFILE_MATCHED
+                else "Business Analyst jobs"
+            )
+            st.caption(
+                f"{len(current)} eligible {result_label} in current search results"
+            )
             for i,job in enumerate(current[:3]):_jp_job_card(job,i,False)
             st.button(
             'Open all job results →',
@@ -1580,14 +1738,48 @@ elif page=='Job Discovery':
         != "DISMISSED"
         and not is_excluded_job_location(job)
     ]
-    # Independent catalogue filters.
-    role_filter = st.selectbox(
-        "Role category",
-        [
+    # Catalogue filters respect the authenticated user's search mode.
+    catalogue_profile_key = get_profile_key(AUTH_USER_ID)
+    catalogue_mode = (
+        BA_ONLY
+        if catalogue_profile_key == BA_PROFILE
+        else PROFILE_MATCHED
+    )
+
+    if catalogue_mode == PROFILE_MATCHED:
+        from app.services.user_context import get_user_profile_directory
+
+        catalogue_role_path = (
+            PROJECT_ROOT / "data" / "role_universes" / "wife_role_universe.json"
+            if catalogue_profile_key == WIFE_PROFILE
+            else PROJECT_ROOT / "data" / "role_universe.json"
+        )
+
+        if catalogue_role_path.exists():
+            try:
+                with catalogue_role_path.open("r", encoding="utf-8") as file:
+                    catalogue_role_universe = json.load(file)
+            except (OSError, json.JSONDecodeError):
+                catalogue_role_universe = {"roles": []}
+        else:
+            catalogue_role_universe = {"roles": []}
+
+        role_filter_options = [
+            "All discovered jobs",
+            "Profile-matched roles",
+            "Other titles",
+        ]
+    else:
+        catalogue_role_universe = None
+        role_filter_options = [
             "All discovered jobs",
             "Business Analyst titles",
             "Other titles",
-        ],
+        ]
+
+    role_filter = st.selectbox(
+        "Role category",
+        role_filter_options,
         key="jp_catalogue_role_filter",
     )
 
@@ -1602,7 +1794,6 @@ elif page=='Job Discovery':
         key="jp_catalogue_date_filter",
     )
 
-
     def is_approved_relevant_job(job):
         return (
             (job.get("relevance_level") or "").upper()
@@ -1611,19 +1802,36 @@ elif page=='Job Discovery':
             != "DISMISSED"
         )
 
+    def is_catalogue_profile_match(job):
+        return is_profile_matched_title(
+            job.get("title"),
+            catalogue_role_universe,
+        )
 
-    if role_filter == "Business Analyst titles":
-        jobs = [
-            job for job in jobs
-            if is_ba_title(job.get("title"))
-            or is_approved_relevant_job(job)
-        ]
-    elif role_filter == "Other titles":
-        jobs = [
-            job for job in jobs
-            if not is_ba_title(job.get("title"))
-            and not is_approved_relevant_job(job)
-        ]
+    if catalogue_mode == PROFILE_MATCHED:
+        if role_filter == "Profile-matched roles":
+            jobs = [
+                job for job in jobs
+                if is_catalogue_profile_match(job)
+            ]
+        elif role_filter == "Other titles":
+            jobs = [
+                job for job in jobs
+                if not is_catalogue_profile_match(job)
+            ]
+    else:
+        if role_filter == "Business Analyst titles":
+            jobs = [
+                job for job in jobs
+                if is_ba_title(job.get("title"))
+                or is_approved_relevant_job(job)
+            ]
+        elif role_filter == "Other titles":
+            jobs = [
+                job for job in jobs
+                if not is_ba_title(job.get("title"))
+                and not is_approved_relevant_job(job)
+            ]
 
 
 
