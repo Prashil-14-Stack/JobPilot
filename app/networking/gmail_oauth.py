@@ -172,15 +172,17 @@ def begin_gmail_authorization(user_id: str) -> str:
         state=state,
         autogenerate_code_verifier=True,
     )
-    if not flow.code_verifier:
-        raise RuntimeError("Google OAuth did not generate a PKCE verifier.")
 
-    st.session_state[VERIFIER_KEY] = flow.code_verifier
     authorization_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
         prompt="consent",
     )
+
+    if not flow.code_verifier:
+        raise RuntimeError("Google OAuth did not generate a PKCE verifier.")
+
+    st.session_state[VERIFIER_KEY] = flow.code_verifier
 
     st.session_state[STATE_KEY] = state
     st.session_state[USER_KEY] = normalized_user
