@@ -5,18 +5,19 @@ import sys
 import tempfile
 from pathlib import Path
 from typing import Any
-from app.services.profile_config import BA_PROFILE, WIFE_PROFILE, get_profile_key
-import streamlit as st
 
 # ============================================================
 # PROJECT PATH
 # ============================================================
-st.caption("DEPLOY TEST: 59635c6")
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+import streamlit as st
+from app.services.profile_config import BA_PROFILE, WIFE_PROFILE, get_profile_key
+
+st.caption("DEPLOY TEST: 59635c6")
 
 from app.networking.playwright_setup import ensure_chromium_installed
 from app.services.cv_ingestion_service import CVIngestionService
