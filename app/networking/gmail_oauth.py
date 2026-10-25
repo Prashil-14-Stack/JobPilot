@@ -187,7 +187,6 @@ def begin_gmail_authorization(user_id: str) -> str:
 
     authorization_url, _ = flow.authorization_url(
         access_type="offline",
-        include_granted_scopes="true",
         prompt="consent",
     )
 
