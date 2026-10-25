@@ -4,6 +4,12 @@ import json
 
 from pydantic import BaseModel, Field
 from app.services.user_context import get_user_profile_directory
+from app.services.profile_config import BA_PROFILE, WIFE_PROFILE, get_profile_key
+from app.services.user_search_preferences import (
+    BA_ONLY,
+    PROFILE_MATCHED,
+    load_search_preferences,
+)
 
 
 PROJECT_ROOT = (
@@ -87,14 +93,57 @@ class SearchPlan(BaseModel):
 
 class SearchStrategy:
 
-    def __init__(self, user_id: str | None = None):
+    def __init__(
+        self,
+        user_id: str | None = None,
+        search_mode: str | None = None,
+    ):
 
         self.user_id = user_id.strip().lower() if user_id else None
 
-        self.role_universe = (
-            self.load_json(
-                ROLE_UNIVERSE_PATH
-            )
+        if self.user_id:
+            saved_preferences = load_search_preferences(self.user_id)
+            self.search_mode = str(
+                search_mode or saved_preferences.get("search_mode", BA_ONLY)
+            ).strip().upper()
+        else:
+            self.search_mode = BA_ONLY
+
+        if self.search_mode not in {BA_ONLY, PROFILE_MATCHED}:
+            raise ValueError(f"Unsupported search mode: {self.search_mode}")
+
+        if not self.user_id:
+            self.profile_key = BA_PROFILE
+            self.role_universe_path = ROLE_UNIVERSE_PATH
+        else:
+            self.profile_key = get_profile_key(self.user_id)
+
+            if self.profile_key == BA_PROFILE:
+                # Preserve the existing 26-role BA universe.
+                self.role_universe_path = ROLE_UNIVERSE_PATH
+
+            elif self.profile_key == WIFE_PROFILE:
+                # Wife's fixed role universe will be stored separately.
+                self.role_universe_path = (
+                    PROJECT_ROOT
+                    / "data"
+                    / "role_universes"
+                    / "wife_role_universe.json"
+                )
+
+                if not self.role_universe_path.exists():
+                    raise FileNotFoundError(
+                        "The predefined role universe for this profile has not "
+                        "been configured yet."
+                    )
+
+            else:
+                raise ValueError(
+                    f"Unsupported JobPilot profile: {self.profile_key}"
+                )
+
+        self.role_universe = self.load_json(
+            self.role_universe_path
         )
 
         self.capability_registry = (
@@ -104,17 +153,26 @@ class SearchStrategy:
         )
 
         if self.user_id:
-            self.candidate_profile_path = (
-                get_user_profile_directory(self.user_id)
-                / "current_profile.json"
-            )
-            self.search_plan_path = (
-                get_user_profile_directory(self.user_id)
-                / "search_plan.json"
-            )
+            user_profile_directory = get_user_profile_directory(self.user_id)
+
+            if self.profile_key == WIFE_PROFILE:
+                self.candidate_profile_path = (
+                    PROJECT_ROOT
+                    / "data"
+                    / "candidate"
+                    / "profiles"
+                    / "wife_profile.json"
+                )
+            else:
+                self.candidate_profile_path = (
+                    user_profile_directory / "current_profile.json"
+                )
+
+            # Keep search plans isolated by authenticated user.
+            self.search_plan_path = user_profile_directory / "search_plan.json"
+
         else:
-            # Preserve the legacy standalone behavior. Authenticated UI
-            # callers must pass user_id and never use these shared paths.
+            # Preserve legacy standalone behavior.
             self.candidate_profile_path = CANDIDATE_PROFILE_PATH
             self.search_plan_path = SEARCH_PLAN_PATH
 
@@ -155,41 +213,70 @@ class SearchStrategy:
     # --------------------------------------------------
 
     def get_roles(self):
+        """Return enabled roles; preserve existing BA roles without an enabled field."""
 
-        return self.role_universe.get(
-            "roles",
-            []
-        )
+        roles = self.role_universe.get("roles", [])
+
+        return [
+            role
+            for role in roles
+            if role.get("enabled", True) is not False
+        ]
 
     @staticmethod
     def get_role_relevance(role) -> str:
+        """Support both text relevance and numeric role priorities."""
 
-        return str(
-            role.get(
-                "relevance",
-                "MEDIUM"
-            )
-        ).upper()
+        relevance = role.get("relevance")
+
+        if relevance:
+            return str(relevance).upper()
+
+        priority = role.get("priority")
+
+        priority_mapping = {
+            1: "HIGH",
+            2: "MEDIUM",
+            3: "LOW",
+        }
+
+        if priority is not None:
+            try:
+                return priority_mapping.get(int(priority), "MEDIUM")
+            except (TypeError, ValueError):
+                pass
+
+        return "MEDIUM"
 
     @staticmethod
     def get_search_variants(role) -> list[str]:
+        """Support both the existing BA schema and the static wife schema."""
 
-        variants = role.get(
-            "search_variants",
-            []
+        variants = role.get("search_variants", [])
+
+        if not variants:
+            variants = role.get("search_keywords", [])
+
+        canonical_title = (
+            role.get("canonical_title")
+            or role.get("title")
         )
 
-        canonical_title = role.get(
-            "canonical_title"
-        )
+        if isinstance(variants, str):
+            variants = [variants]
 
         if not variants and canonical_title:
+            variants = [canonical_title]
 
-            variants = [
-                canonical_title
-            ]
+        # Always include the role's canonical title for discovery.
+        if canonical_title and canonical_title not in variants:
+            variants = [canonical_title, *variants]
 
-        return variants
+        return [
+            str(variant).strip()
+            for variant in variants
+            if str(variant).strip()
+        ]
 
     # --------------------------------------------------
     # Source handling
@@ -391,9 +478,10 @@ class SearchStrategy:
         source: dict
     ) -> str:
 
-        role_title = role.get(
-            "canonical_title",
-            "Unknown role"
+        role_title = (
+            role.get("canonical_title")
+            or role.get("title")
+            or "Unknown role"
         )
 
         source_name = source.get(
@@ -460,181 +548,60 @@ class SearchStrategy:
     # --------------------------------------------------
     # Search variant selection
     # --------------------------------------------------
-
     @staticmethod
-    def select_variants(
-        role
-    ) -> list[str]:
-
-        """
-        Select canonical title plus up to two
-        unique variants.
-        """
-
-        canonical = role.get(
-            "canonical_title"
-        )
-
-        variants = role.get(
-            "search_variants",
-            []
-        )
-
-        if not variants and canonical:
-
-            return [canonical]
-
-        unique_variants = []
-
-        seen = set()
-
-        for variant in variants:
-
-            if not variant:
-                continue
-
-            value = str(
-                variant
-            ).strip()
-
-            normalized = value.lower()
-
-            if (
-                normalized
-                and normalized not in seen
-            ):
-
-                seen.add(normalized)
-
-                unique_variants.append(
-                    value
-                )
-
-        if canonical:
-
-            canonical_value = str(
-                canonical
-            ).strip()
-
-            if (
-                canonical_value.lower()
-                not in seen
-            ):
-
-                unique_variants.insert(
-                    0,
-                    canonical_value
-                )
-
-        return unique_variants[:3]
-
-    @staticmethod
-    def select_variants_for_source(
-        role,
-        source
-    ) -> list[str]:
-
-        """
-        Select search variants based on role intent
-        and source category.
-
-        This controls task volume while preserving
-        meaningful search coverage.
-        """
+    def select_variants(role) -> list[str]:
+        """Select the canonical title and up to two unique variants."""
 
         canonical = str(
-            role.get(
-                "canonical_title",
-                ""
-            )
+            role.get("canonical_title") or role.get("title") or ""
         ).strip()
 
-        variants = role.get(
-            "search_variants",
-            []
+        variants = (
+            role.get("search_variants")
+            or role.get("search_keywords")
+            or []
         )
 
-        source_category = source.get(
-            "source_category"
-        )
-
-        if not canonical:
-
-            return []
-
-        # --------------------------------------------------
-        # Build clean ordered variant list
-        # --------------------------------------------------
+        if isinstance(variants, str):
+            variants = [variants]
 
         all_variants = []
-
         seen = set()
 
-        for value in (
-            [canonical] + variants
-        ):
-
-            if not value:
-                continue
-
-            value = str(
-                value
-            ).strip()
-
+        for value in [canonical, *variants]:
+            value = str(value or "").strip()
             normalized = value.lower()
 
-            if (
-                normalized
-                and normalized not in seen
-            ):
-
+            if normalized and normalized not in seen:
                 seen.add(normalized)
+                all_variants.append(value)
 
-                all_variants.append(
-                    value
-                )
+        return all_variants[:3]
 
-        if not all_variants:
+    @staticmethod
+    def select_variants_for_source(role, source) -> list[str]:
+        """Select unique search variants using source-specific limits."""
 
-            return []
+        all_variants = SearchStrategy.select_variants(role)
+        source_category = source.get("source_category")
 
-        # --------------------------------------------------
-        # Source-specific search coverage
-        # --------------------------------------------------
-
-        if source_category == "JOB_NETWORK":
-
+        if source_category in {
+            "JOB_NETWORK",
+            "JOB_AGGREGATOR",
+            "JOB_BOARD",
+        }:
             return all_variants[:2]
 
-        if source_category == "JOB_AGGREGATOR":
-
-            return all_variants[:2]
-
-        if source_category == "JOB_BOARD":
-
-            return all_variants[:2]
-
-        if source_category == "ATS_PLATFORM":
-
+        if source_category in {
+            "ATS_PLATFORM",
+            "DISCOVERY_LAYER",
+            "PUBLIC_EMPLOYMENT",
+            "EMPLOYER_CAREERS",
+        }:
             return all_variants[:1]
 
-        if source_category == "DISCOVERY_LAYER":
-
-            return all_variants[:1]
-
-        if source_category == "PUBLIC_EMPLOYMENT":
-
-            return all_variants[:1]
-
-        if source_category == "EMPLOYER_CAREERS":
-
-            return all_variants[:1]
-
-        if source_category == "INDUSTRY_PORTAL":
-
-            return all_variants[:2]
-
-        return all_variants[:1]
+        # Preserve the previous fallback behavior for other source types.
+        return all_variants
 
     # --------------------------------------------------
     # Source suitability
@@ -654,16 +621,19 @@ class SearchStrategy:
         """
 
         title = str(
-            role.get(
-                "canonical_title",
-                ""
-            )
+            role.get("canonical_title")
+            or role.get("title")
+            or ""
         ).lower()
 
-        keywords = role.get(
-            "related_keywords",
-            []
+        keywords = (
+            role.get("related_keywords")
+            or role.get("search_keywords")
+            or []
         )
+
+        if isinstance(keywords, str):
+            keywords = [keywords]
 
         role_text = (
             f"{title} "
@@ -952,12 +922,15 @@ class SearchStrategy:
                         location_scope
                     )
 
-                    priority = (
-                        self.calculate_priority(
+                    if self.profile_key == WIFE_PROFILE:
+                        # For Priyanka, task priority follows the predefined role priority.
+                        priority = relevance
+                    else:
+                        # Preserve existing source-based priority for the BA profile.
+                        priority = self.calculate_priority(
                             role,
                             source
                         )
-                    )
 
                     task = SearchTask(
 
@@ -966,9 +939,8 @@ class SearchStrategy:
                         ),
 
                         canonical_role=(
-                            role.get(
-                                "canonical_title"
-                            )
+                            role.get("canonical_title")
+                            or role.get("title")
                         ),
 
                         search_variant=variant,

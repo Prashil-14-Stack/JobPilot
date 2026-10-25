@@ -1,0 +1,929 @@
+{
+  "profile_id": "wife",
+  "profile_name": "Priyanka Maske",
+  "version": 1,
+  "generated_by": "static_predefined_role_universe",
+  "llm_role_discovery_enabled": false,
+  "notes": "Initial static target role universe based on CV. Validate against each vacancy; stretch roles may require additional experience.",
+  "roles": [
+    {
+      "role_id": "wife_role_01",
+      "title": "Software Asset Management Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software asset management",
+        "SAM",
+        "software licensing",
+        "ITAM"
+      ],
+      "required_skills": [
+        "SAM",
+        "ITAM",
+        "software licensing",
+        "license compliance"
+      ],
+      "exclude_keywords": [
+        "physical asset management only",
+        "financial asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_02",
+      "title": "Senior Software Asset Management Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "senior software asset management consultant",
+        "SAM consultant",
+        "ITAM consultant"
+      ],
+      "required_skills": [
+        "SAM",
+        "ITAM",
+        "software licensing",
+        "governance"
+      ],
+      "exclude_keywords": [
+        "physical asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_03",
+      "title": "Software Asset Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software asset management analyst",
+        "SAM analyst"
+      ],
+      "required_skills": [
+        "SAM",
+        "licensing",
+        "entitlements",
+        "reconciliation"
+      ],
+      "exclude_keywords": [
+        "physical asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_04",
+      "title": "Senior Software Asset Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "senior SAM analyst",
+        "senior software asset management analyst"
+      ],
+      "required_skills": [
+        "SAM",
+        "software licensing",
+        "compliance",
+        "renewals"
+      ],
+      "exclude_keywords": [
+        "physical asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_05",
+      "title": "IT Asset Management Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "IT asset management consultant",
+        "ITAM consultant"
+      ],
+      "required_skills": [
+        "ITAM",
+        "asset lifecycle",
+        "software assets",
+        "governance"
+      ],
+      "exclude_keywords": [
+        "facilities asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_06",
+      "title": "IT Asset Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "IT asset management analyst",
+        "ITAM analyst"
+      ],
+      "required_skills": [
+        "ITAM",
+        "asset inventory",
+        "discovery data",
+        "compliance"
+      ],
+      "exclude_keywords": [
+        "facilities asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_07",
+      "title": "IT Asset Management Specialist",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "IT asset management specialist",
+        "ITAM specialist"
+      ],
+      "required_skills": [
+        "ITAM",
+        "asset lifecycle",
+        "software assets"
+      ],
+      "exclude_keywords": [
+        "facilities asset management only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_08",
+      "title": "IT Asset Management Process Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "ITAM process consultant",
+        "IT asset management process consultant"
+      ],
+      "required_skills": [
+        "process design",
+        "ITAM",
+        "workflow",
+        "governance"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_09",
+      "title": "Software Licensing Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software licensing consultant",
+        "licensing consultant"
+      ],
+      "required_skills": [
+        "software licensing",
+        "license models",
+        "entitlements",
+        "ELP"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_10",
+      "title": "Software License Compliance Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software license compliance analyst",
+        "license compliance analyst"
+      ],
+      "required_skills": [
+        "license compliance",
+        "reconciliation",
+        "audit",
+        "ELP"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_11",
+      "title": "Software License Compliance Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software license compliance consultant",
+        "license compliance consultant"
+      ],
+      "required_skills": [
+        "license compliance",
+        "software audits",
+        "remediation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_12",
+      "title": "ServiceNow SAM Pro Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "ServiceNow SAM Pro consultant",
+        "ServiceNow software asset management"
+      ],
+      "required_skills": [
+        "ServiceNow SAM Pro",
+        "software asset management",
+        "entitlements",
+        "discovery"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_13",
+      "title": "ServiceNow Software Asset Management Specialist",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "ServiceNow SAM specialist",
+        "ServiceNow software asset management specialist"
+      ],
+      "required_skills": [
+        "ServiceNow SAM Pro",
+        "publishers",
+        "entitlements",
+        "contracts"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_14",
+      "title": "Software Asset Management Implementation Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "SAM implementation consultant",
+        "software asset management implementation"
+      ],
+      "required_skills": [
+        "SAM implementation",
+        "configuration",
+        "data validation",
+        "licensing"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_15",
+      "title": "Software Asset Management Governance Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "SAM governance consultant",
+        "software asset governance"
+      ],
+      "required_skills": [
+        "governance",
+        "policies",
+        "controls",
+        "ISO 19770"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_16",
+      "title": "Software Asset Management Process Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "SAM process analyst",
+        "software asset management process analyst"
+      ],
+      "required_skills": [
+        "process documentation",
+        "renewals",
+        "workflow",
+        "standardisation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_17",
+      "title": "Software Renewal Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software renewal analyst",
+        "software renewals",
+        "renewal management analyst"
+      ],
+      "required_skills": [
+        "renewals",
+        "approvals",
+        "contracts",
+        "vendor coordination"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_18",
+      "title": "Software Contract Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software contract analyst",
+        "software contract management"
+      ],
+      "required_skills": [
+        "software contracts",
+        "renewals",
+        "compliance",
+        "documentation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_19",
+      "title": "IT Software Compliance Consultant",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "IT software compliance consultant",
+        "software compliance consultant"
+      ],
+      "required_skills": [
+        "software compliance",
+        "governance",
+        "audit readiness"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_20",
+      "title": "Software Entitlement Management Analyst",
+      "category": "core",
+      "priority": 1,
+      "search_keywords": [
+        "software entitlement analyst",
+        "entitlement management analyst"
+      ],
+      "required_skills": [
+        "entitlements",
+        "ELP",
+        "license reconciliation",
+        "software licensing"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_21",
+      "title": "IT Procurement Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT procurement analyst",
+        "technology procurement analyst"
+      ],
+      "required_skills": [
+        "IT procurement",
+        "vendor quotes",
+        "sourcing",
+        "cost savings"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_22",
+      "title": "Technology Procurement Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "technology procurement analyst",
+        "technology sourcing analyst"
+      ],
+      "required_skills": [
+        "technology procurement",
+        "software sourcing",
+        "vendor evaluation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_23",
+      "title": "Software Procurement Consultant",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "software procurement consultant",
+        "software sourcing consultant"
+      ],
+      "required_skills": [
+        "software procurement",
+        "licensing",
+        "commercial evaluation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_24",
+      "title": "IT Vendor Management Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT vendor management analyst",
+        "technology vendor analyst"
+      ],
+      "required_skills": [
+        "vendor management",
+        "contracts",
+        "renewals",
+        "stakeholders"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_25",
+      "title": "Software Vendor Management Specialist",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "software vendor management specialist",
+        "software vendor specialist"
+      ],
+      "required_skills": [
+        "software publishers",
+        "vendor governance",
+        "renewals"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_26",
+      "title": "IT Contract Management Specialist",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT contract management specialist",
+        "IT contract specialist"
+      ],
+      "required_skills": [
+        "IT contracts",
+        "contract lifecycle",
+        "renewals",
+        "approvals"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_27",
+      "title": "Technology Contract Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "technology contract analyst",
+        "IT contract analyst"
+      ],
+      "required_skills": [
+        "technology contracts",
+        "pricing",
+        "commercial terms",
+        "compliance"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_28",
+      "title": "IT Spend Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT spend analyst",
+        "technology spend analyst"
+      ],
+      "required_skills": [
+        "IT spend",
+        "software spend",
+        "budgeting",
+        "renewal trends"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_29",
+      "title": "Technology Cost Optimisation Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "technology cost optimization analyst",
+        "technology cost optimisation analyst"
+      ],
+      "required_skills": [
+        "cost optimization",
+        "software spend",
+        "procurement savings"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_30",
+      "title": "IT Financial Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT financial analyst",
+        "technology financial analyst"
+      ],
+      "required_skills": [
+        "IT budget",
+        "spend analysis",
+        "forecasting",
+        "software costs"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_31",
+      "title": "Software Asset Data Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "software asset data analyst",
+        "SAM data analyst"
+      ],
+      "required_skills": [
+        "asset data",
+        "discovery records",
+        "licensing data",
+        "reconciliation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_32",
+      "title": "IT Asset Reporting Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT asset reporting analyst",
+        "ITAM reporting analyst"
+      ],
+      "required_skills": [
+        "asset reporting",
+        "dashboards",
+        "Excel",
+        "Power BI"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_33",
+      "title": "IT Governance Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT governance analyst",
+        "technology governance analyst"
+      ],
+      "required_skills": [
+        "IT governance",
+        "policies",
+        "controls",
+        "process documentation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_34",
+      "title": "IT Compliance Analyst",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT compliance analyst",
+        "technology compliance analyst"
+      ],
+      "required_skills": [
+        "IT compliance",
+        "controls",
+        "remediation",
+        "audit readiness"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_35",
+      "title": "IT Process Improvement Consultant",
+      "category": "adjacent",
+      "priority": 2,
+      "search_keywords": [
+        "IT process improvement consultant",
+        "IT process consultant"
+      ],
+      "required_skills": [
+        "process improvement",
+        "workflow design",
+        "standardisation",
+        "Visio"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_36",
+      "title": "IT Governance Risk and Compliance Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "IT GRC analyst",
+        "IT governance risk compliance analyst"
+      ],
+      "required_skills": [
+        "IT governance",
+        "risk",
+        "controls",
+        "compliance"
+      ],
+      "exclude_keywords": [
+        "cybersecurity engineering only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_37",
+      "title": "Technology Risk Consultant",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "technology risk consultant",
+        "IT risk consultant"
+      ],
+      "required_skills": [
+        "technology risk",
+        "IT controls",
+        "compliance"
+      ],
+      "exclude_keywords": [
+        "penetration testing",
+        "security engineering"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_38",
+      "title": "IT Audit Consultant",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "IT audit consultant",
+        "software licensing audit consultant"
+      ],
+      "required_skills": [
+        "IT audit",
+        "software licensing audit",
+        "controls",
+        "compliance"
+      ],
+      "exclude_keywords": [
+        "external financial audit only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_39",
+      "title": "Software Asset Management Programme Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "SAM program analyst",
+        "software asset management programme analyst"
+      ],
+      "required_skills": [
+        "programme governance",
+        "SAM",
+        "renewals",
+        "stakeholders"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_40",
+      "title": "IT Service Management Consultant",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "ITSM consultant",
+        "IT service management consultant"
+      ],
+      "required_skills": [
+        "ServiceNow",
+        "IT service management",
+        "process design"
+      ],
+      "exclude_keywords": [
+        "requires ITSM architecture only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_41",
+      "title": "ServiceNow ITAM Consultant",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "ServiceNow ITAM consultant",
+        "ServiceNow asset management consultant"
+      ],
+      "required_skills": [
+        "ServiceNow ITAM",
+        "SAM Pro",
+        "asset management"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_42",
+      "title": "FinOps Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "FinOps analyst",
+        "cloud cost analyst"
+      ],
+      "required_skills": [
+        "FinOps",
+        "cost optimization",
+        "spend analysis"
+      ],
+      "exclude_keywords": [
+        "requires extensive cloud FinOps only"
+      ],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_43",
+      "title": "Technology Business Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "technology business analyst",
+        "IT business analyst"
+      ],
+      "required_skills": [
+        "requirements",
+        "process analysis",
+        "stakeholder management",
+        "documentation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_44",
+      "title": "IT Business Process Consultant",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "IT business process consultant",
+        "business process consultant IT"
+      ],
+      "required_skills": [
+        "business process analysis",
+        "workflow",
+        "Visio",
+        "standardisation"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_45",
+      "title": "Technology Sourcing Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "technology sourcing analyst",
+        "IT sourcing analyst"
+      ],
+      "required_skills": [
+        "sourcing",
+        "vendor quotes",
+        "procurement",
+        "software licensing"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_46",
+      "title": "Procurement Operations Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "procurement operations analyst",
+        "procurement analyst"
+      ],
+      "required_skills": [
+        "procurement operations",
+        "approvals",
+        "contracts",
+        "process controls"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_47",
+      "title": "Commercial Operations Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "commercial operations analyst",
+        "commercial analyst technology"
+      ],
+      "required_skills": [
+        "pricing analysis",
+        "contracts",
+        "procurement savings",
+        "reporting"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_48",
+      "title": "Vendor Performance Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "vendor performance analyst",
+        "supplier performance analyst"
+      ],
+      "required_skills": [
+        "vendor management",
+        "supplier data",
+        "contracts",
+        "renewals"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_49",
+      "title": "IT Controls Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "IT controls analyst",
+        "technology controls analyst"
+      ],
+      "required_skills": [
+        "IT controls",
+        "compliance",
+        "governance",
+        "audit readiness"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    },
+    {
+      "role_id": "wife_role_50",
+      "title": "IT Programme Governance Analyst",
+      "category": "stretch",
+      "priority": 3,
+      "search_keywords": [
+        "IT programme governance analyst",
+        "IT project governance analyst"
+      ],
+      "required_skills": [
+        "programme governance",
+        "risk tracking",
+        "reporting",
+        "stakeholder coordination"
+      ],
+      "exclude_keywords": [],
+      "enabled": true
+    }
+  ]
+}

@@ -1,0 +1,116 @@
+{
+  "source_cv": "Priyanka Maske_SAM_Consultant.pdf",
+  "professional_summary": "Software Asset Management professional with 4+ years of experience in software licensing, renewals, IT compliance, vendor governance, and software portfolio management. Experience includes managing $30M+ software portfolios, delivering approximately $3M in procurement savings, coordinating 200+ software renewals, and configuring ServiceNow SAM Pro. Holds an MBA in IT and System Management, FlexeraOne ITAM Administrator certification, and ISO/IEC 19770 IT Asset Management certification.",
+  "capabilities": {
+    "skills": [
+      "Software Asset Management",
+      "IT Asset Management",
+      "Software Licensing",
+      "Software License Compliance",
+      "Entitlement License Position",
+      "License Reconciliation",
+      "Contract Management",
+      "Renewal Management",
+      "Vendor Management",
+      "IT Procurement",
+      "Business Process Analysis",
+      "IT Governance",
+      "Compliance Reporting",
+      "Software Spend Analysis",
+      "Budget Analysis",
+      "Pricing Analysis",
+      "Stakeholder Management",
+      "Process Documentation",
+      "Workflow Design",
+      "Asset Inventory",
+      "Discovery Data Validation",
+      "Procurement Cost Optimisation",
+      "Requirements Analysis",
+      "Reporting",
+      "Dashboard Development"
+    ],
+    "tools": [
+      "ServiceNow SAM Pro",
+      "FlexeraOne",
+      "Microsoft Visio",
+      "Microsoft Excel",
+      "Microsoft Power BI",
+      "Microsoft Word",
+      "Microsoft PowerPoint",
+      "Microsoft 365 Copilot",
+      "SQL"
+    ],
+    "technologies": [
+      "ServiceNow SAM Pro",
+      "FlexeraOne",
+      "Software Asset Management",
+      "IT Asset Management",
+      "Microsoft Power BI",
+      "SQL"
+    ],
+    "methodologies": [
+      "Software License Reconciliation",
+      "IT Asset Governance",
+      "Process Standardisation",
+      "Renewal Governance",
+      "ISO/IEC 19770-aligned IT Asset Management"
+    ],
+    "domains": [
+      "Software Asset Management",
+      "IT Asset Management",
+      "Software Licensing",
+      "IT Compliance",
+      "IT Procurement",
+      "Vendor Management",
+      "Technology Cost Optimisation"
+    ],
+    "functional_areas": [
+      "Software Licensing and Compliance",
+      "Software Renewals",
+      "Contract Governance",
+      "Entitlement Management",
+      "ServiceNow SAM Pro",
+      "Software Procurement",
+      "IT Spend Analysis",
+      "Vendor Governance",
+      "IT Asset Reporting",
+      "Process Improvement",
+      "IT Governance",
+      "Software Audit Readiness"
+    ],
+    "role_signals": [
+      "Software Asset Management Consultant",
+      "IT Asset Management Consultant",
+      "Software Licensing Consultant",
+      "ServiceNow SAM Pro Consultant",
+      "Software License Compliance Analyst",
+      "Software Renewal Management Analyst",
+      "IT Procurement Analyst",
+      "IT Governance Analyst",
+      "Technology Business Analyst"
+    ]
+  },
+  "education": [
+    "MBA in IT and System Management \u2014 NMIMS Global, Mumbai, 2024",
+    "B.E. in Electronics Design Technology \u2014 RBU, Nagpur, 2022"
+  ],
+  "certifications": [
+    "FlexeraOne ITAM Administrator Certification \u2014 2026",
+    "ISO/IEC 19770 IT Asset Management Certification \u2014 2026"
+  ],
+  "experience_summary": {
+    "years": "4+",
+    "current_employer": "Ernst & Young India LLP",
+    "current_title": "Senior Consultant",
+    "evidence": [
+      "Software licensing and governance across 250+ publishers",
+      "Software portfolios exceeding $30M",
+      "Coordinated 200+ software renewals",
+      "Approximately $3M in procurement savings",
+      "ServiceNow SAM Pro configuration and data validation",
+      "Annual IT budgeting support and renewal dashboards"
+    ]
+  },
+  "role_universe_file": "data/role_universes/wife_role_universe.json",
+  "role_discovery_mode": "static"
+}
