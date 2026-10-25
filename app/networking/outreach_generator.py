@@ -82,6 +82,9 @@ class OutreachGenerator:
             requirement=requirement,
             evidence=evidence,
             contact_function=contact_function,
+            candidate_name=(
+                str(self.candidate_profile.get("candidate_name") or "Candidate").strip()
+            ),
         )
 
         return OutreachMessage(
@@ -210,46 +213,58 @@ class OutreachGenerator:
         self,
         job: dict[str, Any],
     ) -> str:
-
-        description = (
-            job.get("description")
-            or ""
-        ).strip()
+        """Select job requirements relevant to the active candidate's profile."""
+        description = str(job.get("description") or "").strip()
 
         if not description:
             return "the requirements outlined for the role"
 
         description_lower = description.lower()
+        profile = self.candidate_profile
 
-        priority_signals = [
-            "data migration",
-            "requirements gathering",
-            "stakeholder management",
-            "uat",
-            "business analysis",
-            "process modelling",
-            "data mapping",
-            "functional requirements",
-            "user stories",
-        ]
+        # Build candidate-specific signals from the active profile.
+        signals: list[str] = []
 
-        matched = [
-            signal
-            for signal in priority_signals
-            if signal in description_lower
-        ]
+        capabilities = profile.get("capabilities", {})
+        if isinstance(capabilities, dict):
+            for key in (
+                "skills",
+                "tools",
+                "technologies",
+                "domains",
+                "functional_areas",
+            ):
+                values = capabilities.get(key, [])
+                if isinstance(values, list):
+                    signals.extend(
+                        str(value).strip().lower()
+                        for value in values
+                        if str(value).strip()
+                    )
 
-        if len(matched) >= 2:
-            return (
-                "the focus on "
-                + " and ".join(matched[:2])
+        summary = str(profile.get("professional_summary") or "").strip()
+        if summary:
+            # Add useful phrases from the candidate's summary.
+            summary_parts = (
+                summary.replace(".", ",")
+                .replace(";", ",")
+                .split(",")
             )
+            signals.extend(
+                part.strip().lower()
+                for part in summary_parts
+                if len(part.strip()) >= 4
+            )
+
+        # Preserve useful role-specific phrases from the job description
+        # when they overlap with the candidate's profile.
+        matched = []
+        for signal in dict.fromkeys(signals):
+            if signal in description_lower and signal not in matched:
+                matched.append(signal)
 
         if matched:
-            return (
-                "the focus on "
-                + matched[0]
-            )
+            return "the focus on " + " and ".join(matched[:2])
 
         return "the requirements outlined for the role"
 
@@ -261,45 +276,89 @@ class OutreachGenerator:
         self,
         requirement: str,
     ) -> str:
-
+        """Select evidence only from the active candidate's profile."""
+        profile = self.candidate_profile
         requirement_lower = requirement.lower()
 
-        experience_items = (
-            self.candidate_profile
-            .get("experience", [])
-        )
-
-        # Reconstruct the experience text because the
-        # profile stores experience as text fragments.
-        experience_text = " ".join(
-            item.get("text", "")
+        experience_items = profile.get("experience", [])
+        experience_parts = [
+            item.get("text", "").strip()
             for item in experience_items
-            if isinstance(item, dict)
-        )
+            if isinstance(item, dict) and item.get("text")
+        ]
 
-        experience_lower = experience_text.lower()
+        summary = str(
+            profile.get("professional_summary") or ""
+        ).strip()
 
-        # Strongest evidence for data migration /
-        # requirements gathering roles.
-        if (
-            "data migration" in requirement_lower
-            and "6.5m+" in experience_lower
-            and "opUS".lower() in experience_lower
-            and "mccamish ngin" in experience_lower
-        ):
+        capabilities = profile.get("capabilities", {})
+        capability_parts = []
+
+        if isinstance(capabilities, dict):
+            for key in (
+                "skills",
+                "tools",
+                "technologies",
+                "domains",
+                "functional_areas",
+            ):
+                values = capabilities.get(key, [])
+                if isinstance(values, list):
+                    capability_parts.extend(
+                        str(value).strip()
+                        for value in values
+                        if str(value).strip()
+                    )
+
+        evidence_pool = experience_parts + ([summary] if summary else [])
+        if not evidence_pool:
+            evidence_pool = capability_parts
+
+        if not evidence_pool:
             return (
-                "My background combines Business Analysis, "
-                "data transformation and insurance, including "
-                "leading the migration of 6.5M+ insurance policies "
-                "from OPUS to McCamish NGIN and working across "
-                "business and technology teams."
+                "My experience and skills are outlined in my "
+                "attached CV and can be discussed in more detail."
             )
 
-        return (
-            "My background combines Business Analysis, "
-            "data transformation and insurance, with experience "
-            "working across business and technology teams."
-        )
+        # Prefer evidence related to the role's stated requirements.
+        signals = [
+            signal.strip().lower()
+            for signal in requirement_lower.replace("the focus on ", "").split(" and ")
+            if signal.strip()
+        ]
+
+        scored = []
+        for index, item in enumerate(evidence_pool):
+            item_lower = item.lower()
+            score = sum(1 for signal in signals if signal in item_lower)
+
+            # A summary is useful context, but prefer specific experience
+            # when it is relevant to the opportunity.
+            scored.append((score, -index, item))
+
+        best_score = max(item[0] for item in scored)
+        if best_score > 0:
+            selected = [
+                item for score, _, item in scored
+                if score == best_score
+            ][:2]
+        else:
+            selected = evidence_pool[:2]
+
+        # Keep the draft readable and avoid repeating an entire CV section.
+        selected = [
+            " ".join(item.split())[:550]
+            for item in selected
+            if item.strip()
+        ]
+
+        if not selected:
+            return (
+                "My experience and skills are outlined in my "
+                "attached CV and can be discussed in more detail."
+            )
+
+        return "Relevant experience from my background includes: " + " ".join(selected)
     # --------------------------------------------------
     # Subject
     # --------------------------------------------------
@@ -330,6 +389,7 @@ class OutreachGenerator:
         requirement: str,
         evidence: str,
         contact_function: str,
+        candidate_name: str = "Candidate",
     ) -> str:
 
         greeting_name = (
@@ -347,4 +407,4 @@ I came across {company}'s opening for {role} and was particularly interested in 
 Given your role in {contact_function}, I thought it would be worth reaching out directly. I've attached my CV for context and would be grateful if you could keep my profile in mind for this role or similar opportunities within your team.
 
 Best regards,
-Prashil Wanjari"""
+{candidate_name}"""

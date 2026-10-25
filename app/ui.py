@@ -583,7 +583,16 @@ def load_candidate_profile() -> dict[str, Any]:
         return {}
 
     with profile_path.open("r", encoding="utf-8") as file:
-        return json.load(file)
+        profile = json.load(file)
+
+    # Keep outreach identity aligned with the authenticated profile.
+    profile.setdefault(
+        "candidate_name",
+        "Priyanka Maske" if profile_key == WIFE_PROFILE
+        else "Prashil Wanjari",
+    )
+
+    return profile
 
 def is_ba_title(title: str | None) -> bool:
 
