@@ -20,6 +20,7 @@ SCOPES = ["https://www.googleapis.com/auth/gmail.send"]
 STATE_KEY = "jobpilot_gmail_oauth_state"
 USER_KEY = "jobpilot_gmail_oauth_user"
 URL_KEY = "jobpilot_gmail_oauth_url"
+VERIFIER_KEY = "jobpilot_gmail_oauth_code_verifier"
 STATE_TTL_SECONDS = 600
 
 
@@ -49,7 +50,11 @@ def _oauth_config() -> dict[str, str]:
     }
 
 
-def _new_flow(state: str | None = None) -> Flow:
+def _new_flow(
+    state: str | None = None,
+    code_verifier: str | None = None,
+    autogenerate_code_verifier: bool = False,
+) -> Flow:
     config = _oauth_config()
     client_config: dict[str, Any] = {
         "web": {
@@ -65,10 +70,11 @@ def _new_flow(state: str | None = None) -> Flow:
         client_config,
         scopes=SCOPES,
         state=state,
+        code_verifier=code_verifier,
+        autogenerate_code_verifier=autogenerate_code_verifier,
     )
     flow.redirect_uri = config["redirect_uri"]
     return flow
-
 
 def gmail_token_path(user_id: str):
     return get_user_profile_directory(user_id) / "gmail_token.json"
@@ -162,7 +168,14 @@ def begin_gmail_authorization(user_id: str) -> str:
         return existing_url
 
     state = _create_signed_state(normalized_user)
-    flow = _new_flow(state=state)
+    flow = _new_flow(
+        state=state,
+        autogenerate_code_verifier=True,
+    )
+    if not flow.code_verifier:
+        raise RuntimeError("Google OAuth did not generate a PKCE verifier.")
+
+    st.session_state[VERIFIER_KEY] = flow.code_verifier
     authorization_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
@@ -201,8 +214,17 @@ def finish_gmail_authorization(
         code = code[0] if code else None
     if not code:
         raise RuntimeError("Google did not return an authorization code.")
+    code_verifier = st.session_state.get(VERIFIER_KEY)
 
-    flow = _new_flow(state=state)
+    if not code_verifier:
+        raise RuntimeError(
+            "The Gmail authorization verifier is missing. "
+            "Click Connect Gmail and complete authorization in the same session."
+        )
+    flow = _new_flow(
+        state=state,
+        code_verifier=code_verifier,
+    )
     flow.fetch_token(code=str(code))
     credentials = flow.credentials
 
@@ -218,6 +240,8 @@ def finish_gmail_authorization(
     token_path.write_text(credentials.to_json(), encoding="utf-8")
 
     # Clear pending state in this session if it exists.
+
     st.session_state.pop(STATE_KEY, None)
     st.session_state.pop(USER_KEY, None)
     st.session_state.pop(URL_KEY, None)
+    st.session_state.pop(VERIFIER_KEY, None)

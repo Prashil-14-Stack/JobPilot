@@ -69,7 +69,7 @@ class GmailOAuthTests(unittest.TestCase):
 
         flow = MagicMock()
         flow.credentials = credentials
-
+        st.session_state[gmail_oauth.VERIFIER_KEY] = "test-code-verifier"
         with (
             patch.object(gmail_oauth, "_new_flow", return_value=flow),
             patch.object(gmail_oauth, "gmail_token_path") as mock_token_path,
@@ -93,7 +93,7 @@ class GmailOAuthTests(unittest.TestCase):
         self.assertNotIn(gmail_oauth.STATE_KEY, st.session_state)
         self.assertNotIn(gmail_oauth.USER_KEY, st.session_state)
         self.assertNotIn(gmail_oauth.URL_KEY, st.session_state)
-
+        self.assertNotIn(gmail_oauth.VERIFIER_KEY, st.session_state)
 
 if __name__ == "__main__":
     unittest.main()
