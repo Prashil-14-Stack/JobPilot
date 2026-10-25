@@ -220,8 +220,12 @@ def finish_gmail_authorization(
 
     if not code_verifier:
         raise RuntimeError(
-            "The Gmail authorization verifier is missing. "
-            "Click Connect Gmail and complete authorization in the same session."
+            "PKCE_DIAGNOSTIC: verifier_missing; "
+            f"session_has_state={bool(st.session_state.get(STATE_KEY))}; "
+            f"session_user_matches="
+            f"{st.session_state.get(USER_KEY) == user_id.strip().lower()}; "
+            f"callback_state_matches="
+            f"{st.session_state.get(STATE_KEY) == state}"
         )
     flow = _new_flow(
         state=state,
